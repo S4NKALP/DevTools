@@ -1,53 +1,20 @@
-## 1.0.0
+## 0.1.0
 
-Version 1.0.0 Changelog
--------------------------
+Version 0.1.0 - Initial Release
 
-### 🔧 Maintenance
+📝 Documentation:
+- Updated ChangelogGenerator class documentation in docs(changelog)
+- Updated changelog format for clarity and consistency in docs(changelog)
+- Added ChangelogGenerator class documentation in docs(changelog)
+- Updated LICENSE
 
-* 📝 docs(changelog): updated changelog format for clarity and consistency
+🔧 Maintenance:
+- Removed unused variable in _run\_git\_command calls in refactor(git.py)
+- Updated GitService to return exit code from _run\_git\_command and improved get\_commit\_history method signature and docstring in refactor(devtools/shared/git.py)
 
-### 📝 Documentation
+📚 Documentation:
+- Updated changelog format in docs(changelog)
 
-* 📚 docs(changelog): update changelog format and add ChangelogGenerator class documentation
-
-### 🔄 Changed
-
-* ♻️ refactor(git.py): remove unused variable in _run_git_command calls
-* ♻️ refactor(devtools/shared/git.py): update GitService to return exit code from _run_git_command and improve get_commit_history method signature and docstring.
-
-### 📝 Documentation
-
-* Update LICENSE
-
-### 🗑️ Removed
-
-* Initial commit
-
-## 1.0.0
-
-### Version 1.0.0
-
-#### 🔄 Changed
-
-- refactor(git.py): Removed unused variable in `_run_git_command` calls
-- refactor(devtools/shared/git.py): Updated `GitService` to return exit code from `_run_git_command` and improved `get_commit_history` method signature and docstring
-
-#### 📝 Documentation
-
-- docs(changelog): Updated changelog format for clarity and consistency
-- docs(changelog): Update changelog format and add ChangelogGenerator class documentation
-
-#### 🔧 Maintenance
-
-- Update LICENSE
+🔒 Security:
 - Initial commit
-
-#### 🚀 Performance & 🗑️ Removed
-
-- None
-
-#### 🔒 Security
-
-- None
 
