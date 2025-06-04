@@ -2,9 +2,10 @@
 Commit message and changelog generation using AI.
 """
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 from ..shared.ai import AIService
 from ..shared.config import Config
+from concurrent.futures import ThreadPoolExecutor
 
 
 class CommitGenerator(AIService):
@@ -110,18 +111,79 @@ Output ONLY the commit message in the correct format (with emoji)."""
     def generate_batch_messages(
         self, diffs: Dict[str, str], temperature: Optional[float] = None
     ) -> Dict[str, str]:
-        """Generate commit messages for multiple files."""
+        """Generate commit messages for multiple files with intelligent grouping.
+
+        This method analyzes the diffs to determine if they should be grouped into a single
+        commit message or kept separate based on their relationship and scope.
+
+        Args:
+            diffs: Dictionary mapping file paths to their diffs
+            temperature: Optional temperature for generation
+
+        Returns:
+            Dictionary mapping file paths to their commit messages
+        """
+        if not diffs:
+            return {}
+
         if len(diffs) == 1:
             file_path, diff = next(iter(diffs.items()))
             return {file_path: self.generate_commit_message(diff, temperature)}
 
-        combined_diff = "\n\n".join(
-            f"Changes in {file_path}:\n{diff}" for file_path, diff in diffs.items()
+        # First, analyze the diffs to determine if they should be grouped
+        system_prompt = """You are an expert at analyzing code changes and determining their relationships.
+Analyze the provided diffs and determine if they represent related changes that should be grouped together.
+Consider:
+1. Are the changes part of the same feature or fix?
+2. Do they share a common scope or purpose?
+3. Would separating them make the commit history less meaningful?
+
+Respond with either:
+- "GROUP" if the changes should be combined into one commit
+- "SEPARATE" if the changes should have individual commit messages
+Include a brief explanation of your reasoning."""
+
+        # Prepare the diffs for analysis
+        analysis_input = "\n\n".join(
+            f"File: {file_path}\nChanges:\n{diff}" for file_path, diff in diffs.items()
         )
 
-        message = self.generate_commit_message(combined_diff, temperature)
+        analysis = self.generate_completion(
+            system_prompt,
+            f"Analyze these changes:\n\n{analysis_input}",
+            temperature=0.1,  # Lower temperature for more consistent analysis
+        )
 
-        return {file_path: message for file_path in diffs.keys()}
+        should_group = "GROUP" in analysis.upper()
+
+        if should_group:
+            # Generate a single commit message for all changes
+            try:
+                # Create a structured diff that maintains file context
+                structured_diff = "\n\n".join(
+                    f"=== Changes in {file_path} ===\n{diff}"
+                    for file_path, diff in diffs.items()
+                )
+
+                message = self.generate_commit_message(structured_diff, temperature)
+                return {file_path: message for file_path in diffs.keys()}
+            except Exception as e:
+                # Fallback to individual messages if combined generation fails
+                print(f"Warning: Failed to generate combined message: {e}")
+                should_group = False
+
+        if not should_group:
+            # Generate individual messages for each file
+            results = {}
+            for file_path, diff in diffs.items():
+                try:
+                    message = self.generate_commit_message(diff, temperature)
+                    results[file_path] = message
+                except Exception as e:
+                    # Fallback to a basic message if generation fails
+                    print(f"Warning: Failed to generate message for {file_path}: {e}")
+                    results[file_path] = "🔧 chore: update code"
+            return results
 
     def generate_changelog(
         self, commits: List[str], version: str, temperature: Optional[float] = None
