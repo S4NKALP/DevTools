@@ -18,146 +18,138 @@ class CommitGenerator(AIService):
         self, diff: str, temperature: Optional[float] = None
     ) -> str:
         """Generate a commit message from a diff."""
-        system_prompt = """You are an expert Git assistant trained to write clean, conventional commit messages with optional bodies.
+        system_prompt = """You are an expert Git assistant trained to write highly effective and conventional commit messages.
 
-Follow this format:
+Your task is to analyze the provided code diff and generate a commit message in the following format:
 
-<type>(<scope>): <short summary>
-[blank line]
-<detailed body explaining the change>
-
-Where:
+Format: type(scope): description
 - type: One of feat, fix, docs, style, refactor, test, chore
-- scope: Optional but recommended (e.g. auth, api, db)
-- summary: A short, one-line description of the change
-- body: (Optional) Add context, rationale, and details about the change
+- scope: Optional but encouraged; represents the part of the codebase affected (e.g. auth, api, db, ui)
+- description: A short, clear explanation of the change
 
-Each type must have an emoji:
+Each type has an emoji prefix:
 - ✨ feat: New feature
 - 🐛 fix: Bug fix
-- 📚 docs: Documentation
-- 💅 style: Formatting (no code logic)
-- ♻️ refactor: Code restructure without behavior change
-- ✅ test: Tests added or modified
-- 🔧 chore: Maintenance, configs, build scripts, etc.
+- 📚 docs: Documentation-only change
+- 💅 style: Code formatting (no logic change)
+- ♻️ refactor: Code changes without affecting behavior
+- ✅ test: Test additions/changes
+- 🔧 chore: Maintenance, build, or config tasks
 
-Rules:
-- Subject must be a single line, max ~72 characters
-- Use imperative mood: “add”, not “added”
-- Don’t include file paths, issue numbers, or PR references
-- Use body only if extra context is helpful (start with a verb or full sentence)
-- Don’t include explanations about what can be written
-- DO NOT include “commit message” or meta-language
+Strict rules:
+- Write the entire message in a single line
+- Use imperative mood (e.g. "add" not "added")
+- No file paths, no periods at the end
+- Avoid generic or vague descriptions
+- Don't mention pull requests, issues, or reviewers
+- Focus on the why and impact of the change, not just the what
 
 Examples:
-✨ feat(auth): add OAuth2 login support
+- ✨ feat(auth): add OAuth2 login support
+- 🐛 fix(api): return correct HTTP status for invalid input
+- ♻️ refactor(db): simplify user query joins
 
-Adds full OAuth2 login flow using access and refresh tokens.
-This improves external authentication and reduces local user management.
-"""
+Output ONLY the commit message. Do not include any comments or explanations."""
 
-        user_prompt = f"""Generate a conventional commit message for the following code changes:
+        user_prompt = f"""Generate a single-line conventional commit message for the following code changes:
 
 {diff}
 
-- Include a single-line subject
-- Add a body section if useful, separated by a blank line
-- Output must match the conventional commit format
-- Use the correct emoji prefix
-"""
+Identify the most relevant type, a concise scope, and the purpose of the change.
+Output ONLY the commit message in the correct format (with emoji)."""
 
         message = self.generate_completion(
             system_prompt, user_prompt, temperature=temperature
         )
 
-        # Clean and extract subject and optional body
-        lines = [line.rstrip() for line in message.splitlines()]
-        subject = ""
-        body_lines = []
+        lines = [line.strip() for line in message.split("\n") if line.strip()]
 
-        for i, line in enumerate(lines):
-            if not subject and line and ":" in line:
-                subject = line.strip()
+        for line in lines:
+            if any(
+                skip in line.lower()
+                for skip in [
+                    "based on",
+                    "changes in",
+                    "can be written",
+                    "commit message",
+                    "following",
+                    "these changes",
+                    "the changes",
+                ]
+            ):
                 continue
-            if subject:
-                body_lines = lines[i:]
-                break
+            if line.startswith("`") or line.startswith("/") or ":" in line:
+                continue
+            message = line
+            break
+        else:
+            message = lines[0] if lines else "🔧 chore: update code"
 
-        if not subject:
-            subject = "🔧 chore: update code"
-
-        # Ensure emoji in the subject
         if not any(
-            emoji in subject for emoji in ["✨", "🐛", "📚", "💅", "♻️", "✅", "🔧"]
+            emoji in message for emoji in ["✨", "🐛", "📚", "💅", "♻️", "✅", "🔧"]
         ):
-            if subject.startswith("feat"):
-                subject = "✨ " + subject
-            elif subject.startswith("fix"):
-                subject = "🐛 " + subject
-            elif subject.startswith("docs"):
-                subject = "📚 " + subject
-            elif subject.startswith("style"):
-                subject = "💅 " + subject
-            elif subject.startswith("refactor"):
-                subject = "♻️ " + subject
-            elif subject.startswith("test"):
-                subject = "✅ " + subject
-            elif subject.startswith("chore"):
-                subject = "🔧 " + subject
+            if message.startswith("feat"):
+                message = "✨ " + message
+            elif message.startswith("fix"):
+                message = "🐛 " + message
+            elif message.startswith("docs"):
+                message = "📚 " + message
+            elif message.startswith("style"):
+                message = "💅 " + message
+            elif message.startswith("refactor"):
+                message = "♻️ " + message
+            elif message.startswith("test"):
+                message = "✅ " + message
+            elif message.startswith("chore"):
+                message = "🔧 " + message
             else:
-                subject = "🔧 " + subject
-
-        # Final formatted message
-        message = subject
-        if body_lines:
-            body = "\n".join(line.strip() for line in body_lines if line.strip())
-            if body:
-                message += "\n\n" + body
+                message = "🔧 " + message  # fallback
 
         return message
 
     def generate_batch_messages(
         self, diffs: Dict[str, str], temperature: Optional[float] = None
     ) -> Dict[str, str]:
-        """Generate commit messages for multiple files.
-
-        Args:
-            diffs: Dictionary mapping file paths to their diffs
-            temperature: Optional temperature for AI generation
-
-        Returns:
-            Dictionary mapping file paths to their commit messages
-        """
-        # If only one file, use the single file method
+        """Generate commit messages for multiple files."""
         if len(diffs) == 1:
             file_path, diff = next(iter(diffs.items()))
             return {file_path: self.generate_commit_message(diff, temperature)}
 
-        # Combine all diffs with clear file separators
         combined_diff = "\n\n".join(
             f"Changes in {file_path}:\n{diff}" for file_path, diff in diffs.items()
         )
 
-        # Generate a single commit message for all changes
         message = self.generate_commit_message(combined_diff, temperature)
 
-        # Return the same message for all files
         return {file_path: message for file_path in diffs.keys()}
 
     def generate_changelog(
         self, commits: List[str], version: str, temperature: Optional[float] = None
     ) -> str:
         """Generate a changelog from a list of commits."""
-        system_prompt = """You are a helpful AI that generates changelogs.
+        system_prompt = """You are a professional release manager generating changelogs from commit messages.
+
 Follow these rules:
-- Group changes by type (Added, Changed, Fixed, etc.)
-- Keep descriptions concise but informative
-- Use past tense
-- Start each entry with a verb
-"""
+- Group entries under clear sections: Added, Changed, Fixed, Removed, Refactored, Tests, Chore, etc.
+- Use past tense (e.g. "Added login flow", not "Add login flow")
+- Write concise but informative summaries
+- Each bullet point should start with a verb (e.g. "Fixed", "Added")
+- Skip commit types like "chore" unless they are user-relevant
+- Format sections like this:
+
+## [version]
+### Added
+- Added support for OAuth2 authentication
+
+### Fixed
+- Fixed issue where empty input crashed the API
+
+Do NOT include raw commit messages. Use the commit messages as input and convert them into user-facing changelog entries."""
 
         user_prompt = (
-            f"Generate a changelog for version {version} with these commits:\n\n"
+            f"Generate a clean and structured changelog for version {
+                version
+            } using these commits:\n\n"
             + "\n".join(commits)
         )
 
