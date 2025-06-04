@@ -47,12 +47,12 @@ class GitService:
 
     def get_staged_files(self) -> List[str]:
         """Get list of staged files."""
-        stdout, _ = self._run_git_command(["diff", "--cached", "--name-only"])
+        stdout, _, _ = self._run_git_command(["diff", "--cached", "--name-only"])
         return stdout.splitlines() if stdout else []
 
     def get_unstaged_files(self) -> List[str]:
         """Get list of unstaged files."""
-        stdout, _ = self._run_git_command(
+        stdout, _, _ = self._run_git_command(
             ["ls-files", "--modified", "--others", "--exclude-standard"]
         )
         return stdout.splitlines() if stdout else []
@@ -62,7 +62,7 @@ class GitService:
         args = ["diff", "--cached" if staged else ""]
         if file_path:
             args.append(file_path)
-        stdout, _ = self._run_git_command(args)
+        stdout, _, _ = self._run_git_command(args)
         return stdout
 
     def get_all_diffs(self, staged: bool = True) -> Dict[str, str]:
@@ -76,17 +76,17 @@ class GitService:
         if sign:
             args.append("-S")
         args.extend(["-m", message])
-        stdout, stderr = self._run_git_command(args)
+        stdout, stderr, _ = self._run_git_command(args)
         return not stderr
 
     def get_repo_name(self) -> str:
         """Get the repository name."""
-        stdout, _ = self._run_git_command(["rev-parse", "--show-toplevel"])
+        stdout, _, _ = self._run_git_command(["rev-parse", "--show-toplevel"])
         return Path(stdout).name
 
     def get_current_branch(self) -> str:
         """Get the current branch name."""
-        stdout, _ = self._run_git_command(["rev-parse", "--abbrev-ref", "HEAD"])
+        stdout, _, _ = self._run_git_command(["rev-parse", "--abbrev-ref", "HEAD"])
         return stdout
 
     def push(self, branch: Optional[str] = None) -> bool:
@@ -166,7 +166,7 @@ class GitService:
         if limit:
             args.append(f"-n {limit}")
 
-        stdout, _ = self._run_git_command(args)
+        stdout, _, _ = self._run_git_command(args)
 
         commits = []
         current_commit = []
