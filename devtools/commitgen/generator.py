@@ -44,6 +44,7 @@ class CommitGenerator(AIService):
    - Start with a verb
    - Don't include pull request references in the main message
    - Keep the message clean and focused on the change itself
+   - When analyzing multiple files, focus on the overall change and its impact
 
 5. Examples:
    - ✨ feat(auth): add OAuth3 authentication
@@ -64,6 +65,7 @@ Focus on:
 2. What type of change this is (feat, fix, etc.)
 3. What part of the codebase is affected (scope)
 4. What the change accomplishes (description)
+5. If multiple files are changed, identify the common theme or purpose
 
 Write a single-line commit message following the conventional format. Do not include pull request references in the main message."""
 
@@ -72,7 +74,7 @@ Write a single-line commit message following the conventional format. Do not inc
         )
 
         # Clean up the response to ensure it's a valid commit message
-        message = message.split("\n")[1].strip()
+        message = message.split("\n")[0].strip()
 
         # Remove any pull request references from the main message
         message = (
@@ -104,6 +106,34 @@ Write a single-line commit message following the conventional format. Do not inc
                 message = "🔧 " + message  # Default to chore
 
         return message
+
+    def generate_batch_messages(
+        self, diffs: Dict[str, str], temperature: Optional[float] = None
+    ) -> Dict[str, str]:
+        """Generate commit messages for multiple files.
+
+        Args:
+            diffs: Dictionary mapping file paths to their diffs
+            temperature: Optional temperature for AI generation
+
+        Returns:
+            Dictionary mapping file paths to their commit messages
+        """
+        # If only one file, use the single file method
+        if len(diffs) == 1:
+            file_path, diff = next(iter(diffs.items()))
+            return {file_path: self.generate_commit_message(diff, temperature)}
+
+        # Combine all diffs with clear file separators
+        combined_diff = "\n\n".join(
+            f"Changes in {file_path}:\n{diff}" for file_path, diff in diffs.items()
+        )
+
+        # Generate a single commit message for all changes
+        message = self.generate_commit_message(combined_diff, temperature)
+
+        # Return the same message for all files
+        return {file_path: message for file_path in diffs.keys()}
 
     def generate_changelog(
         self, commits: List[str], version: str, temperature: Optional[float] = None
