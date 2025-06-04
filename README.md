@@ -7,7 +7,7 @@ A collection of developer tools to enhance your workflow. This package includes 
 ```bash
 # Clone the repository
 $ git clone https://github.com/S4NKALP/DevTools.git
-$ cd DevTools
+$ cd devtools
 
 # Install in editable mode
 $ pipx install -e .
@@ -20,28 +20,42 @@ $ pipx install -e .
 The tools use various APIs that require API keys. You can set these using the config command:
 
 ```bash
-# Set OpenRouter API key (for AI features)
+# Set AI provider API key (required for AI features)
+# For OpenRouter
 devtools config set OPENROUTER_API_KEY "your-openrouter-api-key"
 
-# Set GitHub API key (optional, for enhanced features)
-devtools config set github_api_key "your-github-api-key"
+# For OpenAI
+devtools config set OPENAI_API_KEY "your-openai-api-key"
+
+# For Google Gemini
+devtools config set GOOGLE_API_KEY "your-google-api-key"
+
+# For Anthropic Claude
+devtools config set ANTHROPIC_API_KEY "your-anthropic-api-key"
+
+# For Hugging Face
+devtools config set HUGGINGFACE_API_KEY "your-huggingface-api-key"
 ```
 
 Or set them in your environment:
 
 ```bash
-# OpenRouter API key
+# AI Provider API keys
 export OPENROUTER_API_KEY="your-openrouter-api-key"
-
-# GitHub API key
-export GITHUB_API_KEY="your-github-api-key"
+export OPENAI_API_KEY="your-openai-api-key"
+export GOOGLE_API_KEY="your-google-api-key"
+export ANTHROPIC_API_KEY="your-anthropic-api-key"
+export HUGGINGFACE_API_KEY="your-huggingface-api-key"
 ```
 
 Or create a `.env` file in your project root:
 
 ```bash
 OPENROUTER_API_KEY=your-openrouter-api-key
-GITHUB_API_KEY=your-github-api-key
+OPENAI_API_KEY=your-openai-api-key
+GOOGLE_API_KEY=your-google-api-key
+ANTHROPIC_API_KEY=your-anthropic-api-key
+HUGGINGFACE_API_KEY=your-huggingface-api-key
 ```
 
 ### Managing Configuration
@@ -69,8 +83,14 @@ Example config.yaml:
 ```yaml
 # API Keys
 OPENROUTER_API_KEY:
+OPENAI_API_KEY:
+GOOGLE_API_KEY:
+ANTHROPIC_API_KEY:
+HUGGINGFACE_API_KEY:
 
 # AI Settings
+provider: openrouter # or "openai", "gemini", "claude", "huggingface"
+model: mistralai/mixtral-8x7b-instruct # model name for the selected provider
 max_tokens: 1024
 temperature: 0.7
 output_format: text
@@ -87,11 +107,20 @@ repositories: []
 You can set up all configuration options for DevTools using the CLI. This is the recommended way to configure your `~/.devtools/config.yaml` file:
 
 ```bash
-# Set OpenRouter API key (required for AI features)
-devtools config set openrouter_api_key "your-openrouter-api-key"
+# Set AI provider (required for AI features)
+devtools config set provider "openrouter"  # or "openai", "gemini", "claude", "huggingface"
 
-# Set preferred AI model (optional, default is Mixtral)
+# Set preferred AI model (optional, depends on provider)
+# For OpenRouter
 devtools config set model "mistralai/mixtral-8x7b-instruct"
+# For OpenAI
+devtools config set model "gpt-4-turbo-preview"
+# For Gemini
+devtools config set model "gemini-pro"
+# For Claude
+devtools config set model "claude-3-opus-20240229"
+# For Hugging Face
+devtools config set model "mistralai/Mixtral-8x7B-Instruct-v0.1"
 
 # Set temperature for AI completions (optional, default is 0.7)
 devtools config set temperature 0.7
@@ -248,7 +277,12 @@ The generator uses the gitignore.io API to fetch templates. No API key is requir
 ## Features
 
 - **Commit Message Generator:**
-  - AI-powered commit message suggestions using Mixtral 8x7B
+  - AI-powered commit message suggestions using multiple providers:
+    - OpenRouter (Mixtral 8x7B)
+    - OpenAI (GPT-4, GPT-3.5)
+    - Google Gemini
+    - Anthropic Claude
+    - Hugging Face
   - Conventional commit format with emojis
   - GPG signing and push support
   - Changelog generation from commit history
@@ -263,8 +297,12 @@ The generator uses the gitignore.io API to fetch templates. No API key is requir
 
 - Python 3.8+
 - Git
-- OpenRouter API key (for AI features)
-- GitHub API key (optional)
+- AI Provider API key (one of):
+  - OpenRouter API key
+  - OpenAI API key
+  - Google API key
+  - Anthropic API key
+  - Hugging Face API key
 
 ## Development
 

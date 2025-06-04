@@ -1,30 +1,53 @@
 ## 1.0.0
 
-📝 Documentation
+Version 1.0.0 Changelog
+-------------------------
 
-- 📚 docs(changelog): updated changelog format for clarity and consistency
-- 📚 docs(changelog): added documentation for ChangelogGenerator class
+### 🔧 Maintenance
 
-🚀 Performance
+* 📝 docs(changelog): updated changelog format for clarity and consistency
 
-- No performance changes in this version
+### 📝 Documentation
 
-🐛 Fixed
+* 📚 docs(changelog): update changelog format and add ChangelogGenerator class documentation
 
-- No fixes in this version
+### 🔄 Changed
 
-🔧 Maintenance
+* ♻️ refactor(git.py): remove unused variable in _run_git_command calls
+* ♻️ refactor(devtools/shared/git.py): update GitService to return exit code from _run_git_command and improve get_commit_history method signature and docstring.
 
-- Updated LICENSE file for legal compliance
+### 📝 Documentation
 
-🗑️ Removed
+* Update LICENSE
 
-- No features or components removed in this version
+### 🗑️ Removed
 
-🔒 Security
+* Initial commit
 
-- No security improvements in this version
+## 1.0.0
 
-✨ Added
+### Version 1.0.0
 
-- Initial commit of project files and structure
+#### 🔄 Changed
+
+- refactor(git.py): Removed unused variable in `_run_git_command` calls
+- refactor(devtools/shared/git.py): Updated `GitService` to return exit code from `_run_git_command` and improved `get_commit_history` method signature and docstring
+
+#### 📝 Documentation
+
+- docs(changelog): Updated changelog format for clarity and consistency
+- docs(changelog): Update changelog format and add ChangelogGenerator class documentation
+
+#### 🔧 Maintenance
+
+- Update LICENSE
+- Initial commit
+
+#### 🚀 Performance & 🗑️ Removed
+
+- None
+
+#### 🔒 Security
+
+- None
+
