@@ -45,6 +45,9 @@ class CommitGenerator(AIService):
    - Don't include pull request references in the main message
    - Keep the message clean and focused on the change itself
    - When analyzing multiple files, focus on the overall change and its impact
+   - DO NOT include any explanatory text or "Based on the changes" phrases
+   - DO NOT include file paths in the message
+   - DO NOT include any text about what can be written
 
 5. Examples:
    - ✨ feat(auth): add OAuth3 authentication
@@ -55,9 +58,9 @@ class CommitGenerator(AIService):
    - ✅ test(api): add unit tests for user endpoints
    - 🔧 chore(deps): update dependencies
 
-Analyze the changes carefully and write a commit message that accurately reflects the modifications. Focus on the actual changes, not on pull request numbers or references."""
+Write ONLY the commit message in the conventional format. Do not include any explanatory text, file paths, or other content."""
 
-        user_prompt = f"""Analyze these changes and write a conventional commit message:
+        user_prompt = f"""Write a conventional commit message for these changes:
 
 {diff}
 
@@ -67,14 +70,41 @@ Focus on:
 4. What the change accomplishes (description)
 5. If multiple files are changed, identify the common theme or purpose
 
-Write a single-line commit message following the conventional format. Do not include pull request references in the main message."""
+Write ONLY the commit message in the conventional format. Do not include any explanatory text."""
 
         message = self.generate_completion(
             system_prompt, user_prompt, temperature=temperature
         )
 
         # Clean up the response to ensure it's a valid commit message
-        message = message.split("\n")[0].strip()
+        lines = [line.strip() for line in message.split("\n") if line.strip()]
+
+        # Find the first line that looks like a commit message
+        for line in lines:
+            # Skip lines that are explanations or contain file paths
+            if any(
+                skip in line.lower()
+                for skip in [
+                    "based on",
+                    "changes in",
+                    "can be written",
+                    "commit message",
+                    "following",
+                    "these changes",
+                    "the changes",
+                ]
+            ):
+                continue
+
+            # Skip lines that are just file paths
+            if line.startswith("`") or line.startswith("/") or ":" in line:
+                continue
+
+            message = line
+            break
+        else:
+            # If no valid message found, use the first non-empty line
+            message = lines[0] if lines else "chore: update code"
 
         # Remove any pull request references from the main message
         message = (
