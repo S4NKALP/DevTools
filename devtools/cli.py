@@ -7,12 +7,14 @@ from rich.table import Table
 from .shared.config import Config
 from .gitignore.cli import cli as gitignore_cli
 from .commitgen.cli import cli as commit_cli
+from .licensegen.cli import license as license_cli
+from .changelog.cli import cli as changelog_cli
 
 console = Console()
 
 @click.group()
 def cli():
-    """Developer tools CLI."""
+    """DevTools - A collection of developer tools."""
     pass
 
 @cli.group()
@@ -70,8 +72,10 @@ def clear():
         console.print("[green]Cleared all configuration")
 
 # Add subcommands
-cli.add_command(gitignore_cli, name="gitignore")
 cli.add_command(commit_cli, name="commit")
+cli.add_command(changelog_cli, name="changelog")
+cli.add_command(gitignore_cli, name="gitignore")
+cli.add_command(license_cli, name="license")
 
 if __name__ == "__main__":
     cli() 

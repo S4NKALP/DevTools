@@ -10,7 +10,7 @@ $ git clone https://github.com/S4NKALP/DevTools.git
 $ cd devtools
 
 # Install in editable mode
-$ pipx install -e .
+$ pip install -e .
 ```
 
 ## Configuration
@@ -35,6 +35,9 @@ devtools config set ANTHROPIC_API_KEY "your-anthropic-api-key"
 
 # For Hugging Face
 devtools config set HUGGINGFACE_API_KEY "your-huggingface-api-key"
+
+# Set GitHub token (recommended for license generator)
+devtools config set GITHUB_TOKEN "your-github-token"
 ```
 
 Or set them in your environment:
@@ -46,6 +49,9 @@ export OPENAI_API_KEY="your-openai-api-key"
 export GOOGLE_API_KEY="your-google-api-key"
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
 export HUGGINGFACE_API_KEY="your-huggingface-api-key"
+
+# GitHub token for license generator
+export GITHUB_TOKEN="your-github-token"
 ```
 
 Or create a `.env` file in your project root:
@@ -56,6 +62,7 @@ OPENAI_API_KEY=your-openai-api-key
 GOOGLE_API_KEY=your-google-api-key
 ANTHROPIC_API_KEY=your-anthropic-api-key
 HUGGINGFACE_API_KEY=your-huggingface-api-key
+GITHUB_TOKEN=your-github-token
 ```
 
 ### Managing Configuration
@@ -87,6 +94,7 @@ OPENAI_API_KEY:
 GOOGLE_API_KEY:
 ANTHROPIC_API_KEY:
 HUGGINGFACE_API_KEY:
+GITHUB_TOKEN:
 
 # AI Settings
 provider: openrouter # or "openai", "gemini", "claude", "huggingface"
@@ -274,6 +282,52 @@ The generator uses the gitignore.io API to fetch templates. No API key is requir
 
 ---
 
+### License Generator
+
+Generate LICENSE files for your project using templates from GitHub's license API.
+
+```bash
+# List available licenses
+devtools license list
+
+# Generate a license
+devtools license generate [OPTIONS]
+```
+
+**Options:**
+
+- `--type, -t TYPE` Type of license to generate (e.g., mit, apache-2.0, gpl-3.0)
+- `--author, -a NAME` Name of the author/copyright holder
+- `--year, -y YEAR` Year for the copyright notice (defaults to current year)
+- `--output, -o FILE` Output file path (default: LICENSE)
+
+Example:
+
+```bash
+# List available licenses
+devtools license list
+
+# Interactive mode
+devtools license generate
+
+# With all options specified
+devtools license generate --type mit --author "John Doe" --year 2024 --output LICENSE
+```
+
+The license generator uses GitHub's license API to fetch templates. For optimal performance:
+
+1. Set up a GitHub token:
+   ```bash
+   devtools config set GITHUB_TOKEN "your-github-token"
+   ```
+   This increases your API rate limit from 60 to 5,000 requests per hour.
+
+2. If no token is set, the tool will use a fallback list of common licenses.
+
+If an invalid license type is provided, the tool will display a list of available licenses.
+
+---
+
 ## Features
 
 - **Commit Message Generator:**
@@ -292,6 +346,11 @@ The generator uses the gitignore.io API to fetch templates. No API key is requir
   - Uses gitignore.io API for up-to-date templates
   - No API key required
   - Falls back to generic template if API is unavailable
+- **License Generator:**
+  - Generates LICENSE files using GitHub's license API
+  - Supports all licenses available on GitHub
+  - Interactive license selection
+  - Automatic year and author replacement
 
 ## Requirements
 
@@ -303,6 +362,7 @@ The generator uses the gitignore.io API to fetch templates. No API key is requir
   - Google API key
   - Anthropic API key
   - Hugging Face API key
+- GitHub token (recommended for license generator)
 
 ## Development
 

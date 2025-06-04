@@ -34,6 +34,11 @@ class CommitGenGitService(GitService):
         """Commit changes with the given message."""
         if not self.commit(message, sign=sign):
             raise Exception("Failed to commit changes")
+            
+    def push_changes(self) -> None:
+        """Push changes to the current branch."""
+        if not self.push():
+            raise Exception("Failed to push changes")
         
     def get_recent_commits(self, limit: int = 10) -> List[str]:
         """Get recent commit messages."""
