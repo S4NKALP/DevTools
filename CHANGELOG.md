@@ -1,20 +1,33 @@
+# Changelog
+
 ## 0.1.0
 
-Version 0.1.0 - Initial Release
+### Added
 
-📝 Documentation:
-- Updated ChangelogGenerator class documentation in docs(changelog)
-- Updated changelog format for clarity and consistency in docs(changelog)
-- Added ChangelogGenerator class documentation in docs(changelog)
-- Updated LICENSE
+* ✨ docs(changelog): Add ChangelogGenerator class documentation
 
-🔧 Maintenance:
-- Removed unused variable in _run\_git\_command calls in refactor(git.py)
-- Updated GitService to return exit code from _run\_git\_command and improved get\_commit\_history method signature and docstring in refactor(devtools/shared/git.py)
+### Changed
 
-📚 Documentation:
-- Updated changelog format in docs(changelog)
+* 🔄 refactor(generator): Update commit message and changelog generation using AI
+* 🔄 refactor(git.py): Remove unused variable in `_run_git_command` calls
+* 🔄 refactor(devtools/shared/git.py): Update GitService to return exit code from `_run_git_command` and improve `get_commit_history` method signature and docstring
+* 🔄 docs(changelog): Updated changelog format for clarity and consistency
 
-🔒 Security:
-- Initial commit
+### Fixed
+
+* 🐛 docs(changelog): Updated changelog format and added ChangelogGenerator class documentation
+
+### Initial Commits
+
+* 🚀 Initial commit
+* 📚 Update `README.md` file
+* 📚 Update `LICENSE`
+
+### Removed
+
+* 🗑️ Not applicable for this version
+
+### Security
+
+* 🔒 Not applicable for this version
 
