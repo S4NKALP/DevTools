@@ -35,7 +35,8 @@ class CommitGenerator(AIService):
    - chore: 🔧 (maintenance tasks, dependencies, etc)
 
 4. Guidelines:
-   - Keep the description under 73 characters
+   - Write the ENTIRE message on a single line
+   - Keep the message concise and to the point
    - Use imperative mood ("add" not "added")
    - Don't end with a period
    - Focus on the "why" not the "what"
