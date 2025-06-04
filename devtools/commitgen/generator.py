@@ -2,10 +2,10 @@
 Commit message and changelog generation using AI.
 """
 
-from typing import List, Dict, Optional, Tuple
+from typing import Dict, List, Optional
+
 from ..shared.ai import AIService
 from ..shared.config import Config
-from concurrent.futures import ThreadPoolExecutor
 
 
 class CommitGenerator(AIService):
@@ -108,6 +108,123 @@ Output ONLY the commit message in the correct format (with emoji)."""
 
         return message
 
+    def _parse_analysis_result(self, analysis: str) -> bool:
+        """Parse and validate the analysis result from AI.
+
+        Args:
+            analysis: Raw analysis output from AI
+
+        Returns:
+            bool: True if changes should be grouped, False otherwise
+
+        Raises:
+            ValueError: If analysis result cannot be reliably determined
+        """
+        # Normalize the analysis text
+        analysis = analysis.strip().upper()
+
+        # Direct matches
+        if "GROUP" in analysis and "SEPARATE" not in analysis:
+            return True
+        if "SEPARATE" in analysis and "GROUP" not in analysis:
+            return False
+
+        # Check for strong indicators in the explanation
+        group_indicators = [
+            "RELATED",
+            "SAME FEATURE",
+            "SAME FIX",
+            "SAME SCOPE",
+            "SAME PURPOSE",
+            "SHOULD BE GROUPED",
+            "COMBINED",
+        ]
+        separate_indicators = [
+            "UNRELATED",
+            "DIFFERENT",
+            "SEPARATE",
+            "INDEPENDENT",
+            "SHOULD BE SEPARATE",
+            "DISTINCT",
+        ]
+
+        # Count indicators
+        group_count = sum(1 for ind in group_indicators if ind in analysis)
+        separate_count = sum(1 for ind in separate_indicators if ind in analysis)
+
+        # If we have a clear majority, use that
+        if group_count > separate_count and group_count > 0:
+            return True
+        if separate_count > group_count and separate_count > 0:
+            return False
+
+        # If we can't determine reliably, raise an error
+        raise ValueError(
+            f"Could not reliably determine grouping from analysis: {analysis}"
+        )
+
+    def _validate_commit_message(self, message: str) -> str:
+        """Validate and clean up a generated commit message.
+
+        Args:
+            message: Raw commit message from AI
+
+        Returns:
+            str: Cleaned and validated commit message
+        """
+        # Remove any markdown code blocks
+        message = message.replace("```", "").strip()
+
+        # Remove any explanatory text
+        lines = [line.strip() for line in message.split("\n") if line.strip()]
+        for line in lines:
+            # Skip lines that look like explanations
+            if any(
+                skip in line.lower()
+                for skip in [
+                    "based on",
+                    "changes in",
+                    "can be written",
+                    "commit message",
+                    "following",
+                    "these changes",
+                    "the changes",
+                    "here's",
+                    "this is",
+                ]
+            ):
+                continue
+            # Skip lines that look like code or commands
+            if line.startswith("`") or line.startswith("/") or ":" in line:
+                continue
+            message = line
+            break
+        else:
+            message = lines[0] if lines else "🔧 chore: update code"
+
+        # Ensure proper emoji prefix
+        if not any(
+            emoji in message for emoji in ["✨", "🐛", "📚", "💅", "♻️", "✅", "🔧"]
+        ):
+            if message.startswith("feat"):
+                message = "✨ " + message
+            elif message.startswith("fix"):
+                message = "🐛 " + message
+            elif message.startswith("docs"):
+                message = "📚 " + message
+            elif message.startswith("style"):
+                message = "💅 " + message
+            elif message.startswith("refactor"):
+                message = "♻️ " + message
+            elif message.startswith("test"):
+                message = "✅ " + message
+            elif message.startswith("chore"):
+                message = "🔧 " + message
+            else:
+                message = "🔧 " + message  # fallback
+
+        return message
+
     def generate_batch_messages(
         self, diffs: Dict[str, str], temperature: Optional[float] = None
     ) -> Dict[str, str]:
@@ -128,7 +245,8 @@ Output ONLY the commit message in the correct format (with emoji)."""
 
         if len(diffs) == 1:
             file_path, diff = next(iter(diffs.items()))
-            return {file_path: self.generate_commit_message(diff, temperature)}
+            message = self.generate_commit_message(diff, temperature)
+            return {file_path: self._validate_commit_message(message)}
 
         # First, analyze the diffs to determine if they should be grouped
         system_prompt = """You are an expert at analyzing code changes and determining their relationships.
@@ -148,13 +266,20 @@ Include a brief explanation of your reasoning."""
             f"File: {file_path}\nChanges:\n{diff}" for file_path, diff in diffs.items()
         )
 
-        analysis = self.generate_completion(
-            system_prompt,
-            f"Analyze these changes:\n\n{analysis_input}",
-            temperature=0.1,  # Lower temperature for more consistent analysis
-        )
-
-        should_group = "GROUP" in analysis.upper()
+        try:
+            analysis = self.generate_completion(
+                system_prompt,
+                f"Analyze these changes:\n\n{analysis_input}",
+                temperature=0.1,  # Lower temperature for more consistent analysis
+            )
+            should_group = self._parse_analysis_result(analysis)
+        except Exception as e:
+            print(
+                f"Warning: Failed to analyze changes, defaulting to separate messages: {
+                    e
+                }"
+            )
+            should_group = False
 
         if should_group:
             # Generate a single commit message for all changes
@@ -166,6 +291,7 @@ Include a brief explanation of your reasoning."""
                 )
 
                 message = self.generate_commit_message(structured_diff, temperature)
+                message = self._validate_commit_message(message)
                 return {file_path: message for file_path in diffs.keys()}
             except Exception as e:
                 # Fallback to individual messages if combined generation fails
@@ -173,16 +299,61 @@ Include a brief explanation of your reasoning."""
                 should_group = False
 
         if not should_group:
-            # Generate individual messages for each file
+            # Generate individual messages for each file in parallel
+            import time
+            from concurrent.futures import ThreadPoolExecutor
+            from queue import Queue
+            from threading import Lock
+
+            # Rate limiting setup
+            RATE_LIMIT = 5  # requests per second
+            rate_limit_queue = Queue()
+            rate_limit_lock = Lock()
+            last_request_time = time.time()
+
+            def rate_limited_generate(file_path: str, diff: str) -> tuple[str, str]:
+                """Generate commit message with rate limiting."""
+                nonlocal last_request_time
+
+                with rate_limit_lock:
+                    # Calculate time to wait
+                    current_time = time.time()
+                    time_since_last = current_time - last_request_time
+                    if time_since_last < 1.0 / RATE_LIMIT:
+                        time.sleep(1.0 / RATE_LIMIT - time_since_last)
+
+                    try:
+                        message = self.generate_commit_message(diff, temperature)
+                        message = self._validate_commit_message(message)
+                        last_request_time = time.time()
+                        return file_path, message
+                    except Exception as e:
+                        print(
+                            f"Warning: Failed to generate message for {file_path}: {e}"
+                        )
+                        return file_path, "🔧 chore: update code"
+
+            # Use ThreadPoolExecutor with a reasonable number of workers
+            max_workers = min(len(diffs), 10)  # Cap at 10 concurrent workers
             results = {}
-            for file_path, diff in diffs.items():
-                try:
-                    message = self.generate_commit_message(diff, temperature)
-                    results[file_path] = message
-                except Exception as e:
-                    # Fallback to a basic message if generation fails
-                    print(f"Warning: Failed to generate message for {file_path}: {e}")
-                    results[file_path] = "🔧 chore: update code"
+
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                # Submit all tasks
+                future_to_file = {
+                    executor.submit(rate_limited_generate, file_path, diff): file_path
+                    for file_path, diff in diffs.items()
+                }
+
+                # Collect results as they complete
+                for future in future_to_file:
+                    try:
+                        file_path, message = future.result()
+                        results[file_path] = message
+                    except Exception as e:
+                        file_path = future_to_file[future]
+                        print(f"Warning: Failed to process {file_path}: {e}")
+                        results[file_path] = "🔧 chore: update code"
+
             return results
 
     def generate_changelog(
