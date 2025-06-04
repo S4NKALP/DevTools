@@ -7,10 +7,10 @@ A collection of developer tools to enhance your workflow. This package includes 
 ```bash
 # Clone the repository
 $ git clone https://github.com/S4NKALP/DevTools.git
-$ cd devtools
+$ cd DevTools
 
 # Install in editable mode
-$ pip install -e .
+$ pipx install -e .
 ```
 
 ## Configuration
@@ -81,6 +81,53 @@ conventional_commits: true
 # Repository Settings
 repositories: []
 ```
+
+## Configuration via CLI
+
+You can set up all configuration options for DevTools using the CLI. This is the recommended way to configure your `~/.devtools/config.yaml` file:
+
+```bash
+# Set OpenRouter API key (required for AI features)
+devtools config set openrouter_api_key "your-openrouter-api-key"
+
+# Set preferred AI model (optional, default is Mixtral)
+devtools config set model "mistralai/mixtral-8x7b-instruct"
+
+# Set temperature for AI completions (optional, default is 0.7)
+devtools config set temperature 0.7
+
+# Set maximum tokens for AI completions (optional, default is 150)
+devtools config set max_tokens 150
+
+# Set conventional commit style (optional, default is true)
+devtools config set conventional_commits true
+
+# Set output format (optional, e.g., text or markdown)
+devtools config set output_format text
+
+# Set repositories list (optional, usually not needed)
+devtools config set repositories "[]"
+```
+
+To view your current configuration:
+
+```bash
+devtools config show
+```
+
+To delete a config value:
+
+```bash
+devtools config delete output_format
+```
+
+To clear all config:
+
+```bash
+devtools config clear
+```
+
+All configuration is stored in `~/.devtools/config.yaml` and can be managed entirely through these commands. You do not need to manually edit the YAML file.
 
 ## Usage
 
