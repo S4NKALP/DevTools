@@ -437,7 +437,7 @@ pip install -r requirements.txt
 pytest
 
 # Lint
-ruff .
+black .
 ```
 
 ## Contributing
