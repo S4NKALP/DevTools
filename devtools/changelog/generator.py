@@ -119,28 +119,55 @@ class ChangelogGenerator(AIService):
         except FileNotFoundError:
             existing_content = ""
 
-        # Create new version entry
-        new_version_entry = f"## {version}\n\n{changelog_content}\n\n"
+        # Normalize and prepare new entry
+        normalized_version = version.lstrip("vV")
+        header_line = f"## v{normalized_version}"
+        new_version_entry = f"{header_line}\n\n{changelog_content}\n\n"
 
-        if existing_content:
-            # Check if version already exists
-            version_pattern = f"## {version}\n"
-            if version_pattern in existing_content:
-                # Replace existing version content
-                pattern = f"{version_pattern}.*?(?=## |$)"
-                new_content = re.sub(
-                    pattern, new_version_entry, existing_content, flags=re.DOTALL
+        content = existing_content or ""
+
+        # Ensure a single top-level title
+        if not content.strip():
+            content = f"# Changelog\n\n{new_version_entry}"
+        else:
+            # Remove duplicate top-level titles that might exist mid-file
+            lines = content.splitlines()
+            cleaned_lines = []
+            for i, line in enumerate(lines):
+                if i != 0 and line.strip() == "# Changelog":
+                    # skip duplicate title
+                    continue
+                cleaned_lines.append(line)
+            content = "\n".join(cleaned_lines)
+
+            # Ensure the file starts with a single title
+            if not content.lstrip().startswith(
+                "# Changelog\n"
+            ) and not content.strip().startswith("# Changelog"):
+                content = f"# Changelog\n\n{content.strip()}\n"
+
+            # Replace existing section for this version (match both with and without leading 'v')
+            # Find a header line matching the version
+            pattern = (
+                rf"^##\s+v?{re.escape(normalized_version)}\s*$[\s\S]*?(?=^##\s+|\Z)"
+            )
+            if re.search(pattern, content, flags=re.MULTILINE):
+                content = re.sub(
+                    pattern, new_version_entry, content, flags=re.MULTILINE
                 )
             else:
-                # Add new version at the top
-                new_content = new_version_entry + existing_content
-        else:
-            # Create new changelog
-            new_content = f"# Changelog\n\n{new_version_entry}"
+                # Insert new entry after the title
+                if content.startswith("# Changelog\n\n"):
+                    content = content.replace(
+                        "# Changelog\n\n", f"# Changelog\n\n{new_version_entry}", 1
+                    )
+                else:
+                    # Fallback: prepend
+                    content = f"# Changelog\n\n{new_version_entry}{content}"
 
         # Write updated changelog
         with open(output_file, "w") as f:
-            f.write(new_content)
+            f.write(content)
 
     def parse_changes_from_text(self, text: str) -> List[Dict[str, str]]:
         """Parse changes from text input.

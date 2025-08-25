@@ -1,5 +1,8 @@
-## 0.1.1
+# Changelog
 
+## v0.1.1
+
+```
 ## v0.1.1
 
 ✨ Added
@@ -10,8 +13,10 @@
 📝 Documentation
 - Recommended installation using pipx and uv
 
-
-# Changelog
+🔧 Maintenance
+- Removed duplicate changelog entries
+- Updated changelog for v0.1.1 release
+```
 
 ## v0.1.0
 
@@ -48,7 +53,6 @@
 
 ### 🔧 Maintenance
 
-- ## v0.1.0
 - ### 📝 Documentation
 - - 📝 Documentation:
 - ### 🔧 Maintenance
@@ -73,4 +77,3 @@
 
 - ### 🔒 Security
 - - ### Security
-
