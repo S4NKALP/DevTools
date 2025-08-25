@@ -3,17 +3,22 @@
 ## v0.1.1
 
 ✨ Added
+- Added `--no-verify` option to bypass git hooks during commit
+- Added per-file commit generation option
 - Added git hooks management and auto-fix on pre-commit
 - Added git hooks management CLI
-- Added emoji option to cli and config to control emoji prefixes
+- Added emoji option to CLI and config to control emoji prefixes
 
 🔄 Changed
-- Improved changelog generation to handle existing files and duplicate headers
+- Replaced Ruff linter with Black
 
-🗑️ Removed
+🐛 Fixed
+- Improved changelog generation and sanitization of AI output
+- Improved changelog generation to handle existing files and duplicate headers
 - Removed duplicate changelog entries
 
 📝 Documentation
+- Updated changelog for v0.1.0 release
 - Updated changelog for v0.1.1 release
 - Recommended installation using pipx and uv
 
