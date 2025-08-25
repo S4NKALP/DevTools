@@ -378,6 +378,17 @@ Alternatively, pass `--pre-commit-template` and/or `--pre-push-template` to inst
 
 Note: If a hook already exists, DevTools creates a timestamped backup in `.git/hooks/` with the `.bak` suffix before overwriting, e.g., `pre-commit.20250101123000.bak`.
 
+Auto-fix behavior (pre-commit):
+
+- If initial checks fail, DevTools attempts to auto-fix issues by running `scripts/format.py` and `scripts/lintfix.py` if those files exist in your repo.
+- Any changes made are automatically staged (`git add -A`), and checks are re-run. The commit will fail only if the re-run still fails.
+- You can run these scripts manually as well:
+
+```bash
+python3 scripts/format.py
+python3 scripts/lintfix.py
+```
+
 ---
 
 ## Features

@@ -38,8 +38,10 @@ class CommitGenGitService(GitService):
 
     def commit_changes(self, message: str, sign: bool = False) -> None:
         """Commit changes with the given message."""
-        if not self.commit(message, sign=sign):
-            raise Exception("Failed to commit changes")
+        ok, stdout, stderr, code = self.commit_verbose(message, sign=sign)
+        if not ok:
+            details = stderr or stdout or f"exit code {code}"
+            raise Exception(f"Failed to commit changes: {details}")
 
     def push_changes(self) -> None:
         """Push changes to the current branch."""

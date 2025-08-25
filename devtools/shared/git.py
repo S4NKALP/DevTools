@@ -76,8 +76,23 @@ class GitService:
         if sign:
             args.append("-S")
         args.extend(["-m", message])
-        stdout, stderr, _ = self._run_git_command(args)
-        return not stderr
+        stdout, stderr, returncode = self._run_git_command(args)
+        return returncode == 0
+
+    def commit_verbose(
+        self, message: str, sign: bool = False
+    ) -> Tuple[bool, str, str, int]:
+        """Create a commit and return success and raw outputs.
+
+        Returns:
+            (ok, stdout, stderr, returncode)
+        """
+        args = ["commit"]
+        if sign:
+            args.append("-S")
+        args.extend(["-m", message])
+        stdout, stderr, returncode = self._run_git_command(args)
+        return returncode == 0, stdout, stderr, returncode
 
     def get_repo_name(self) -> str:
         """Get the repository name."""

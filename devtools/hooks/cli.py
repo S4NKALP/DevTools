@@ -15,7 +15,7 @@ console = Console()
 
 HOOK_TEMPLATES = {
     "pre-commit": """#!/usr/bin/env bash
-set -euo pipefail
+set -u
 
 echo "Running pre-commit checks..."
 
@@ -50,11 +50,11 @@ run_lint() {
   # Python
   if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
     if command -v ruff >/dev/null 2>&1; then
-      ruff .
+      ruff . || return 1
       return 0
     elif command -v black >/dev/null 2>&1; then
       echo "ruff not found; running black --check instead"
-      black --check .
+      black --check . || return 1
       return 0
     fi
   fi
@@ -68,7 +68,7 @@ run_lint() {
   # Go
   if [ -f "go.mod" ]; then
     if command -v golangci-lint >/dev/null 2>&1; then
-      golangci-lint run
+      golangci-lint run || return 1
       return 0
     fi
     if command -v go >/dev/null 2>&1; then
@@ -76,9 +76,9 @@ run_lint() {
       if [ -n "$fmt_out" ]; then
         echo "Files not formatted (gofmt):"
         echo "$fmt_out"
-        exit 1
+        return 1
       fi
-      go vet ./...
+      go vet ./... || return 1
       return 0
     fi
   fi
@@ -102,15 +102,15 @@ run_tests() {
   # Node.js/TypeScript
   if [ -f "package.json" ]; then
     if command -v npm >/dev/null 2>&1; then
-      npm test -s --if-present || true
+      npm test -s --if-present || return 1
       return 0
     fi
     if command -v pnpm >/dev/null 2>&1; then
-      pnpm -s test || true
+      pnpm -s test || return 1
       return 0
     fi
     if command -v yarn >/dev/null 2>&1; then
-      yarn -s test || true
+      yarn -s test || return 1
       return 0
     fi
   fi
@@ -118,31 +118,31 @@ run_tests() {
   # Python
   if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
     if command -v pytest >/dev/null 2>&1; then
-      pytest -q
+      pytest -q || return 1
       return 0
     fi
   fi
 
   # Rust
   if [ -f "Cargo.toml" ] && command -v cargo >/dev/null 2>&1; then
-    cargo test -q
+    cargo test -q || return 1
     return 0
   fi
 
   # Go
   if [ -f "go.mod" ] && command -v go >/dev/null 2>&1; then
-    go test ./...
+    go test ./... || return 1
     return 0
   fi
 
   # Java
   if [ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
     if [ -x "./gradlew" ]; then
-      ./gradlew -q test || true
+      ./gradlew -q test || return 1
       return 0
     fi
     if command -v mvn >/dev/null 2>&1; then
-      mvn -q test || true
+      mvn -q test || return 1
       return 0
     fi
   fi
@@ -150,8 +150,29 @@ run_tests() {
   echo "No recognized test runner found; skipping tests"
 }
 
-run_lint
-run_tests
+run_checks() {
+  lint_failed=0
+  test_failed=0
+  run_lint || lint_failed=1
+  run_tests || test_failed=1
+  if [ $lint_failed -ne 0 ] || [ $test_failed -ne 0 ]; then
+    return 1
+  fi
+  return 0
+}
+
+# Initial check; if it fails, try to auto-fix using local scripts if present
+if ! run_checks; then
+  echo "Initial checks failed; attempting auto-fix via scripts/format.py and scripts/lintfix.py if present"
+  if [ -f "scripts/format.py" ]; then
+    if command -v python3 >/dev/null 2>&1; then python3 scripts/format.py || true; else python scripts/format.py || true; fi
+  fi
+  if [ -f "scripts/lintfix.py" ]; then
+    if command -v python3 >/dev/null 2>&1; then python3 scripts/lintfix.py || true; else python scripts/lintfix.py || true; fi
+  fi
+  if command -v git >/dev/null 2>&1; then git add -A; fi
+  run_checks
+fi
 
 """,
     "pre-push": """#!/usr/bin/env bash
