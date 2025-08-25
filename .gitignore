@@ -46,3 +46,4 @@ logs/
 
 devtools.egg-info/
 build/
+devtools_utils.egg-info/
