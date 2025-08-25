@@ -48,6 +48,11 @@ def cli():
     default=False,
     help="Include emoji prefixes in commit messages",
 )
+@click.option(
+    "--smart-group/--per-file",
+    default=True,
+    help="Smartly group multiple file changes into one commit (disable to commit per-file)",
+)
 def generate(
     files: tuple,
     repo: str,
@@ -58,6 +63,7 @@ def generate(
     sign: bool,
     temperature: float,
     emoji: bool,
+    smart_group: bool,
 ):
     """Generate commit messages for staged changes"""
     try:
@@ -88,20 +94,51 @@ def generate(
                 console.print("[yellow]No staged changes found.[/yellow]")
                 return
 
-            # Generate commit message
+            # Generate commit message(s)
             task = progress.add_task("Generating commit message...", total=None)
-            commit_message = ai_service.generate_commit_message(
-                staged_changes, temperature
-            )
+            messages_by_file = None
+            if smart_group:
+                commit_message = ai_service.generate_commit_message(
+                    staged_changes, temperature
+                )
+            else:
+                diffs_map = git_service.get_staged_changes_map(
+                    list(files) if files else None
+                )
+                messages_by_file = ai_service.generate_batch_messages(
+                    diffs_map, temperature
+                )
+                commit_message = None
             progress.update(task, completed=True)
 
             # Show preview and confirm
-            console.print("\n[bold]Generated commit message:[/bold]")
-            console.print(Panel(commit_message, title="Preview", border_style="blue"))
+            console.print("\n[bold]Generated commit message(s):[/bold]")
+            if messages_by_file:
+                for fp, msg in messages_by_file.items():
+                    console.print(
+                        Panel(f"{fp}\n\n{msg}", title="Preview", border_style="blue")
+                    )
+            else:
+                console.print(
+                    Panel(commit_message, title="Preview", border_style="blue")
+                )
 
             if commit:
                 task = progress.add_task("Committing changes...", total=None)
-                git_service.commit_changes(commit_message, sign=sign)
+                if messages_by_file:
+                    # Commit each file separately with its message
+                    # Ensure only that file is included in the commit by using pathspec
+                    # Assumes files are already staged; git commit -- <file> will include only that path
+                    for fp, msg in messages_by_file.items():
+                        ok, out, err, code = git_service.commit_paths_verbose(
+                            msg, [fp], sign=sign
+                        )
+                        if not ok:
+                            raise Exception(
+                                f"Failed to commit {fp}: {err or out or code}"
+                            )
+                else:
+                    git_service.commit_changes(commit_message, sign=sign)
                 progress.update(task, completed=True)
 
                 if push:

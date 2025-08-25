@@ -202,6 +202,7 @@ devtools commit generate [OPTIONS]
 - `--sign` Sign commits with GPG
 - `--temperature FLOAT` AI temperature (0.0-1.0)
  - `--emoji/--no-emoji` Include emoji prefixes (default: disabled)
+ - `--smart-group/--per-file` Group multi-file changes into one commit (default: smart-group)
 
 Commit messages follow the conventional format (emojis optional):
 
@@ -213,6 +214,21 @@ When emojis are enabled, these prefixes are used:
 - ♻️ refactor: Code refactoring
 - ✅ test: Adding tests
 - 🔧 chore: Maintenance
+
+Per-file vs grouped commits:
+
+- Use `--smart-group` (default) to generate a single message that covers all staged changes.
+- Use `--per-file` to generate a message per changed file. The CLI will create separate git commits, one per file, each with its own AI-generated message.
+
+Examples:
+
+```bash
+# Single grouped message (default behavior)
+devtools commit generate -c
+
+# Separate commits per file
+devtools commit generate --per-file -c
+```
 
 #### Changelog Generation
 

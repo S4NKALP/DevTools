@@ -94,6 +94,23 @@ class GitService:
         stdout, stderr, returncode = self._run_git_command(args)
         return returncode == 0, stdout, stderr, returncode
 
+    def commit_paths_verbose(
+        self, message: str, files: List[str], sign: bool = False
+    ) -> Tuple[bool, str, str, int]:
+        """Create a commit including only the specified files.
+
+        Returns:
+            (ok, stdout, stderr, returncode)
+        """
+        if not files:
+            return False, "", "no files specified", 1
+        args = ["commit"]
+        if sign:
+            args.append("-S")
+        args.extend(["-m", message, "--"] + list(files))
+        stdout, stderr, returncode = self._run_git_command(args)
+        return returncode == 0, stdout, stderr, returncode
+
     def get_repo_name(self) -> str:
         """Get the repository name."""
         stdout, _, _ = self._run_git_command(["rev-parse", "--show-toplevel"])

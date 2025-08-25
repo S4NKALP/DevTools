@@ -29,6 +29,22 @@ class CommitGenGitService(GitService):
             f"Changes in {file}:\n{diff}" for file, diff in diffs.items()
         )
 
+    def get_staged_changes_map(
+        self, files: Optional[List[str]] = None
+    ) -> dict[str, str]:
+        """Get staged changes as a mapping of file -> diff.
+
+        Args:
+            files: Optional list of files to get changes for
+
+        Returns:
+            Dict mapping file path to its staged diff
+        """
+        diffs = self.get_all_diffs(staged=True)
+        if files:
+            diffs = {file: diff for file, diff in diffs.items() if file in files}
+        return diffs
+
     def get_unstaged_changes(self) -> str:
         """Get unstaged changes as a diff."""
         diffs = self.get_all_diffs(staged=False)
