@@ -91,9 +91,28 @@ class ChangelogGenerator(AIService):
             version
         } with these changes:\n\n{changes_text}"
 
-        return self.generate_completion(
+        raw = self.generate_completion(
             system_prompt, user_prompt, temperature=temperature
         )
+        return self._clean_changelog_content(raw, version)
+
+    def _clean_changelog_content(self, text: str, version: str) -> str:
+        """Sanitize AI output to avoid nested headers and code fences.
+
+        - Remove triple backtick fences
+        - Remove duplicate version headers inside content (e.g., '## v1.2.3')
+        - Trim excess surrounding whitespace
+        """
+        cleaned = text.replace("```", "").strip()
+        # Drop any inner version headers
+        normalized_version = version.lstrip("vV")
+        inner_header_pattern = rf"^##\s+v?{re.escape(normalized_version)}\s*$"
+        lines = []
+        for line in cleaned.splitlines():
+            if re.match(inner_header_pattern, line.strip()):
+                continue
+            lines.append(line)
+        return "\n".join(lines).strip()
 
     def update_changelog_file(
         self,

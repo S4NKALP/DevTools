@@ -2,25 +2,21 @@
 
 ## v0.1.1
 
-```
-## v0.1.1
-
 ✨ Added
 - Added git hooks management and auto-fix on pre-commit
 - Added git hooks management CLI
-- Added emoji option to CLI and config to control emoji prefixes
+- Added emoji option to cli and config to control emoji prefixes
+
+🔄 Changed
+- Improved changelog generation to handle existing files and duplicate headers
+
+🗑️ Removed
+- Removed duplicate changelog entries
 
 📝 Documentation
+- Updated changelog for v0.1.1 release
 - Recommended installation using pipx and uv
 
-🔧 Maintenance
-- Removed duplicate changelog entries
-- Updated changelog for v0.1.1 release
-```
-
-## v0.1.0
-
-```
 ## v0.1.0
 
 ✨ Added
@@ -28,7 +24,6 @@
 - Updated `README.md` file with the new commit message format and ChangelogGenerator class usage 📝
 - ✨ docs(changelog): Add ChangelogGenerator class documentation
 - 🐛 docs(changelog): Updated changelog format and added ChangelogGenerator class documentation
-
 
 🔄 Changed
 - Changes for version 0.1.0:
@@ -44,6 +39,3 @@
 
 🗑️ Removed
 - Removed unused variable in `_run_git_command` calls 🗑️
-
-
-```
