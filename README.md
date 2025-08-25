@@ -10,7 +10,10 @@ $ git clone https://github.com/S4NKALP/DevTools.git
 $ cd devtools
 
 # Install in editable mode
-$ pip install -e .
+$ pipx install .
+
+# Using Uv
+$ uv tool install .
 ```
 
 ## Configuration
