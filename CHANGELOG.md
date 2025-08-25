@@ -11,16 +11,15 @@
 
 🔄 Changed
 - Replaced Ruff linter with Black
-
-🐛 Fixed
 - Improved changelog generation and sanitization of AI output
 - Improved changelog generation to handle existing files and duplicate headers
+
+🗑️ Removed
 - Removed duplicate changelog entries
 
 📝 Documentation
-- Updated changelog for v0.1.0 release
-- Updated changelog for v0.1.1 release
 - Recommended installation using pipx and uv
+- Updated changelog for v0.1.1 release
 
 ## v0.1.0
 

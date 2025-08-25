@@ -96,7 +96,7 @@ Output ONLY the commit message in the correct format{" with emoji" if self.use_e
         else:
             message = lines[0] if lines else "🔧 chore: update code"
 
-        # Apply or remove emoji based on configuration
+        # Apply or remove emoji based on configuration (strict removal when disabled)
         if self.use_emoji:
             if not any(
                 emoji in message for emoji in ["✨", "🐛", "📚", "💅", "♻️", "✅", "🔧"]
@@ -116,13 +116,12 @@ Output ONLY the commit message in the correct format{" with emoji" if self.use_e
                 elif message.startswith("chore"):
                     message = "🔧 " + message
                 else:
-                    message = "🔧 " + message  # fallback
+                    message = "🔧 " + message
         else:
-            # Strip known emojis if present
-            for emoji in ["✨ ", "🐛 ", "📚 ", "💅 ", "♻️ ", "✅ ", "🔧 "]:
-                if message.startswith(emoji):
-                    message = message[len(emoji) :]
-                    break
+            # Remove any known emojis anywhere in the message
+            for emoji in ["✨", "🐛", "📚", "💅", "♻️", "✅", "🔧"]:
+                message = message.replace(emoji, "")
+            message = " ".join(message.split())
 
         return message
 
@@ -220,7 +219,7 @@ Output ONLY the commit message in the correct format{" with emoji" if self.use_e
         else:
             message = lines[0] if lines else "🔧 chore: update code"
 
-        # Ensure proper emoji prefix
+        # Ensure proper emoji prefix or strip strictly according to config
         if self.use_emoji:
             if not any(
                 emoji in message for emoji in ["✨", "🐛", "📚", "💅", "♻️", "✅", "🔧"]
@@ -240,12 +239,11 @@ Output ONLY the commit message in the correct format{" with emoji" if self.use_e
                 elif message.startswith("chore"):
                     message = "🔧 " + message
                 else:
-                    message = "🔧 " + message  # fallback
+                    message = "🔧 " + message
         else:
-            for emoji in ["✨ ", "🐛 ", "📚 ", "💅 ", "♻️ ", "✅ ", "🔧 "]:
-                if message.startswith(emoji):
-                    message = message[len(emoji) :]
-                    break
+            for emoji in ["✨", "🐛", "📚", "💅", "♻️", "✅", "🔧"]:
+                message = message.replace(emoji, "")
+            message = " ".join(message.split())
 
         return message
 
