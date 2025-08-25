@@ -3,23 +3,33 @@
 ## v0.1.1
 
 ✨ Added
-- Added `--no-verify` option to bypass git hooks during commit
-- Added per-file commit generation option
-- Added git hooks management and auto-fix on pre-commit
-- Added git hooks management CLI
-- Added emoji option to CLI and config to control emoji prefixes
+- ✨ Added pyproject.toml for PEP 517/518 build support.
+- ✨ Added `--no-verify` option to bypass git hooks during commit.
+- ✨ Added per-file commit generation option.
+- ✨ Added git hooks management and auto-fix on pre-commit.
+- ✨ Added git hooks management CLI.
+- ✨ Added emoji option to CLI and config to control emoji prefixes.
 
 🔄 Changed
-- Replaced Ruff linter with Black
-- Improved changelog generation and sanitization of AI output
-- Improved changelog generation to handle existing files and duplicate headers
+- 🔄 Replaced ruff linter with black.
 
-🗑️ Removed
-- Removed duplicate changelog entries
+🐛 Fixed
+- 🐛 Removed duplicate changelog entries.
+
+🚀 Performance
 
 📝 Documentation
-- Recommended installation using pipx and uv
-- Updated changelog for v0.1.1 release
+- 📝 Added initial todo list for project improvements.
+- 📝 Updated README with new features, aliases, and configuration details.
+- 📝 Recommended installation using pipx and uv.
+
+🔧 Maintenance
+- 🔧 Improved installation instructions and package metadata for PyPI release.
+
+ Refactor
+- 🔄 Improved emoji handling and sanitization in commit message generation.
+- 🔄 Improved changelog generation and sanitization of AI output.
+- 🔄 Improved changelog generation to handle existing files and duplicate headers.
 
 ## v0.1.0
 
