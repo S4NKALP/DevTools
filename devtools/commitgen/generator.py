@@ -16,7 +16,8 @@ class CommitGenerator(AIService):
         super().__init__(config)
         # Read emoji preference from config (default: disabled)
         self.use_emoji: bool = bool(
-            str(self.config.get("emoji", "false")).strip().lower() in [
+            str(self.config.get("emoji", "false")).strip().lower()
+            in [
                 "1",
                 "true",
                 "yes",

@@ -337,6 +337,49 @@ If an invalid license type is provided, the tool will display a list of availabl
 
 ---
 
+### Hooks Manager
+
+Manage Git hooks easily. Install lint/test hooks for `pre-commit` and `pre-push`.
+
+```bash
+# Install both pre-commit and pre-push hooks in current repo
+devtools hooks install
+
+# Install only pre-commit
+devtools hooks install --pre-commit --no-pre-push
+
+# Install only pre-push
+devtools hooks install --no-pre-commit --pre-push
+
+# Uninstall hooks
+devtools hooks uninstall           # both
+devtools hooks uninstall --pre-commit --no-pre-push
+
+# Use your own script templates
+devtools hooks install \
+  --pre-commit-template ./scripts/hooks/my-pre-commit.sh \
+  --pre-push-template ./scripts/hooks/my-pre-push.sh
+
+# List hooks present in the repository
+devtools hooks list
+```
+
+The hooks auto-detect your ecosystem and run sensible defaults:
+
+- Node.js: `npm run lint --if-present` then `eslint` or `prettier --check`; tests via `npm test`/`pnpm test`/`yarn test`
+- Python: `ruff .` or fallback to `black --check .`; tests via `pytest -q`
+- Rust: `cargo fmt --check`; tests via `cargo test`
+- Go: `gofmt -l` (fail if unformatted), `go vet`; tests via `go test ./...`
+- Java: Gradle `check`/`test` or Maven `verify -DskipTests=true`/`test`
+- If `.pre-commit-config.yaml` is present, `pre-commit run --all-files` is used for pre-commit, and `pre-commit run --hook-stage push --all-files` for pre-push.
+
+You can customize hooks by editing files in `.git/hooks/` after installation.
+Alternatively, pass `--pre-commit-template` and/or `--pre-push-template` to install from your own script files. The files will be copied into `.git/hooks/` and made executable.
+
+Note: If a hook already exists, DevTools creates a timestamped backup in `.git/hooks/` with the `.bak` suffix before overwriting, e.g., `pre-commit.20250101123000.bak`.
+
+---
+
 ## Features
 
 - **Commit Message Generator:**

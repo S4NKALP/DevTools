@@ -1,19 +1,21 @@
 """
 Shared Git service for devtools.
 """
+
 import subprocess
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 import os
 from datetime import datetime, timedelta
 
+
 class GitService:
     """Base Git service that can be extended by specific tools."""
-    
+
     def __init__(self, repo_path: str):
         """Initialize GitService with repository path."""
         self.repo_path = repo_path
-        if not os.path.exists(os.path.join(repo_path, '.git')):
+        if not os.path.exists(os.path.join(repo_path, ".git")):
             raise ValueError(f"Not a git repository: {repo_path}")
 
     def _is_git_repo(self) -> bool:
@@ -23,7 +25,7 @@ class GitService:
                 ["git", "rev-parse", "--is-inside-work-tree"],
                 cwd=self.repo_path,
                 check=True,
-                capture_output=True
+                capture_output=True,
             )
             return True
         except subprocess.CalledProcessError:
@@ -37,7 +39,7 @@ class GitService:
                 cwd=self.repo_path,
                 check=True,
                 capture_output=True,
-                text=True
+                text=True,
             )
             return result.stdout.strip(), result.stderr.strip(), result.returncode
         except subprocess.CalledProcessError as e:
@@ -50,7 +52,9 @@ class GitService:
 
     def get_unstaged_files(self) -> List[str]:
         """Get list of unstaged files."""
-        stdout, _, _ = self._run_git_command(["ls-files", "--modified", "--others", "--exclude-standard"])
+        stdout, _, _ = self._run_git_command(
+            ["ls-files", "--modified", "--others", "--exclude-standard"]
+        )
         return stdout.splitlines() if stdout else []
 
     def get_diff(self, file_path: str, staged: bool = True) -> str:
@@ -100,36 +104,36 @@ class GitService:
             if files:
                 for file in files:
                     result = subprocess.run(
-                        ['git', 'diff', '--staged', '--', file],
+                        ["git", "diff", "--staged", "--", file],
                         cwd=self.repo_path,
                         capture_output=True,
-                        text=True
+                        text=True,
                     )
                     if result.stdout:
                         diffs[file] = result.stdout
             else:
                 result = subprocess.run(
-                    ['git', 'diff', '--staged'],
+                    ["git", "diff", "--staged"],
                     cwd=self.repo_path,
                     capture_output=True,
-                    text=True
+                    text=True,
                 )
                 if result.stdout:
                     # Parse the diff to get individual file changes
                     current_file = None
                     current_diff = []
 
-                    for line in result.stdout.split('\n'):
-                        if line.startswith('diff --git'):
+                    for line in result.stdout.split("\n"):
+                        if line.startswith("diff --git"):
                             if current_file and current_diff:
-                                diffs[current_file] = '\n'.join(current_diff)
-                            current_file = line.split('b/')[-1].strip()
+                                diffs[current_file] = "\n".join(current_diff)
+                            current_file = line.split("b/")[-1].strip()
                             current_diff = [line]
                         elif current_file:
                             current_diff.append(line)
 
                     if current_file and current_diff:
-                        diffs[current_file] = '\n'.join(current_diff)
+                        diffs[current_file] = "\n".join(current_diff)
 
             return diffs
         except subprocess.CalledProcessError as e:
@@ -138,17 +142,15 @@ class GitService:
     def stage_all_changes(self) -> None:
         """Stage all changes in the repository."""
         try:
-            subprocess.run(
-                ['git', 'add', '.'],
-                cwd=self.repo_path,
-                check=True
-            )
+            subprocess.run(["git", "add", "."], cwd=self.repo_path, check=True)
         except subprocess.CalledProcessError as e:
             raise Exception(f"Failed to stage changes: {str(e)}")
 
-    def get_commit_history(self, since: Optional[str] = None, limit: Optional[int] = None) -> List[Dict[str, str]]:
+    def get_commit_history(
+        self, since: Optional[str] = None, limit: Optional[int] = None
+    ) -> List[Dict[str, str]]:
         """Get commit history.
-        
+
         Args:
             since: Get commits since this reference (tag, commit, etc.)
             limit: Maximum number of commits to return
@@ -156,76 +158,78 @@ class GitService:
         args = [
             "log",
             "--pretty=format:%H%n%an%n%ad%n%B%n==END==",
-            "--date=format:%Y-%m-%d %H:%M:%S %z"
+            "--date=format:%Y-%m-%d %H:%M:%S %z",
         ]
-        
+
         if since:
             args.append(f"{since}..HEAD")
         if limit:
             args.append(f"-n {limit}")
-            
+
         stdout, _, _ = self._run_git_command(args)
-        
+
         commits = []
         current_commit = []
-        
-        for line in stdout.split('\n'):
+
+        for line in stdout.split("\n"):
             if line == "==END==":
                 if current_commit:
                     commit_hash, author, date, *message_lines = current_commit
-                    commits.append({
-                        'hash': commit_hash,
-                        'author': author,
-                        'date': date,
-                        'message': '\n'.join(message_lines)
-                    })
+                    commits.append(
+                        {
+                            "hash": commit_hash,
+                            "author": author,
+                            "date": date,
+                            "message": "\n".join(message_lines),
+                        }
+                    )
                 current_commit = []
             else:
                 current_commit.append(line)
-                
+
         return commits
 
     def get_commits_since_tag(self, tag: str) -> List[Dict[str, str]]:
         """Get commits since a tag.
-        
+
         Args:
             tag: Git tag to use as reference point
-            
+
         Returns:
             List of commit dictionaries with hash and message
         """
         cmd = ["git", "log", f"{tag}..HEAD", "--pretty=format:%H|%s"]
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.repo_path)
         result.check_returncode()
-        
+
         commits = []
         for line in result.stdout.splitlines():
             hash_, message = line.split("|", 1)
             commits.append({"hash": hash_, "message": message})
-            
+
         return commits
 
     def get_commits_since_date(self, days: int) -> List[Dict[str, str]]:
         """Get commits since a date.
-        
+
         Args:
             days: Number of days to look back
-            
+
         Returns:
             List of commit dictionaries with hash and message
         """
         # Calculate date
         date = datetime.now() - timedelta(days=days)
         date_str = date.strftime("%Y-%m-%d")
-        
+
         # Get commits
         cmd = ["git", "log", f"--since={date_str}", "--pretty=format:%H|%s"]
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.repo_path)
         result.check_returncode()
-        
+
         commits = []
         for line in result.stdout.splitlines():
             hash_, message = line.split("|", 1)
             commits.append({"hash": hash_, "message": message})
-            
-        return commits 
+
+        return commits
