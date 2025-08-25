@@ -14,6 +14,15 @@ class CommitGenerator(AIService):
     def __init__(self, config: Config):
         """Initialize commit generator."""
         super().__init__(config)
+        # Read emoji preference from config (default: disabled)
+        self.use_emoji: bool = bool(
+            str(self.config.get("emoji", "false")).strip().lower() in [
+                "1",
+                "true",
+                "yes",
+                "on",
+            ]
+        )
 
     def generate_commit_message(
         self, diff: str, temperature: Optional[float] = None
@@ -57,7 +66,7 @@ Output ONLY the commit message. Do not include any comments or explanations."""
 {diff}
 
 Identify the most relevant type, a concise scope, and the purpose of the change.
-Output ONLY the commit message in the correct format (with emoji)."""
+Output ONLY the commit message in the correct format{" with emoji" if self.use_emoji else " without any emoji"}."""
 
         message = self.generate_completion(
             system_prompt, user_prompt, temperature=temperature
@@ -86,25 +95,33 @@ Output ONLY the commit message in the correct format (with emoji)."""
         else:
             message = lines[0] if lines else "🔧 chore: update code"
 
-        if not any(
-            emoji in message for emoji in ["✨", "🐛", "📚", "💅", "♻️", "✅", "🔧"]
-        ):
-            if message.startswith("feat"):
-                message = "✨ " + message
-            elif message.startswith("fix"):
-                message = "🐛 " + message
-            elif message.startswith("docs"):
-                message = "📚 " + message
-            elif message.startswith("style"):
-                message = "💅 " + message
-            elif message.startswith("refactor"):
-                message = "♻️ " + message
-            elif message.startswith("test"):
-                message = "✅ " + message
-            elif message.startswith("chore"):
-                message = "🔧 " + message
-            else:
-                message = "🔧 " + message  # fallback
+        # Apply or remove emoji based on configuration
+        if self.use_emoji:
+            if not any(
+                emoji in message for emoji in ["✨", "🐛", "📚", "💅", "♻️", "✅", "🔧"]
+            ):
+                if message.startswith("feat"):
+                    message = "✨ " + message
+                elif message.startswith("fix"):
+                    message = "🐛 " + message
+                elif message.startswith("docs"):
+                    message = "📚 " + message
+                elif message.startswith("style"):
+                    message = "💅 " + message
+                elif message.startswith("refactor"):
+                    message = "♻️ " + message
+                elif message.startswith("test"):
+                    message = "✅ " + message
+                elif message.startswith("chore"):
+                    message = "🔧 " + message
+                else:
+                    message = "🔧 " + message  # fallback
+        else:
+            # Strip known emojis if present
+            for emoji in ["✨ ", "🐛 ", "📚 ", "💅 ", "♻️ ", "✅ ", "🔧 "]:
+                if message.startswith(emoji):
+                    message = message[len(emoji) :]
+                    break
 
         return message
 
@@ -203,25 +220,31 @@ Output ONLY the commit message in the correct format (with emoji)."""
             message = lines[0] if lines else "🔧 chore: update code"
 
         # Ensure proper emoji prefix
-        if not any(
-            emoji in message for emoji in ["✨", "🐛", "📚", "💅", "♻️", "✅", "🔧"]
-        ):
-            if message.startswith("feat"):
-                message = "✨ " + message
-            elif message.startswith("fix"):
-                message = "🐛 " + message
-            elif message.startswith("docs"):
-                message = "📚 " + message
-            elif message.startswith("style"):
-                message = "💅 " + message
-            elif message.startswith("refactor"):
-                message = "♻️ " + message
-            elif message.startswith("test"):
-                message = "✅ " + message
-            elif message.startswith("chore"):
-                message = "🔧 " + message
-            else:
-                message = "🔧 " + message  # fallback
+        if self.use_emoji:
+            if not any(
+                emoji in message for emoji in ["✨", "🐛", "📚", "💅", "♻️", "✅", "🔧"]
+            ):
+                if message.startswith("feat"):
+                    message = "✨ " + message
+                elif message.startswith("fix"):
+                    message = "🐛 " + message
+                elif message.startswith("docs"):
+                    message = "📚 " + message
+                elif message.startswith("style"):
+                    message = "💅 " + message
+                elif message.startswith("refactor"):
+                    message = "♻️ " + message
+                elif message.startswith("test"):
+                    message = "✅ " + message
+                elif message.startswith("chore"):
+                    message = "🔧 " + message
+                else:
+                    message = "🔧 " + message  # fallback
+        else:
+            for emoji in ["✨ ", "🐛 ", "📚 ", "💅 ", "♻️ ", "✅ ", "🔧 "]:
+                if message.startswith(emoji):
+                    message = message[len(emoji) :]
+                    break
 
         return message
 

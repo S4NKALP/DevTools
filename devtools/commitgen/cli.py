@@ -31,7 +31,8 @@ def cli():
 @click.option('--no-stage', is_flag=True, help='Skip automatic staging of changes')
 @click.option('--sign', is_flag=True, help='Sign commits with GPG')
 @click.option('--temperature', type=float, help='AI temperature (0.0-1.0)')
-def generate(files: tuple, repo: str, commit: bool, push: bool, conventional: bool, no_stage: bool, sign: bool, temperature: float):
+@click.option('--emoji/--no-emoji', default=False, help='Include emoji prefixes in commit messages')
+def generate(files: tuple, repo: str, commit: bool, push: bool, conventional: bool, no_stage: bool, sign: bool, temperature: float, emoji: bool):
     """Generate commit messages for staged changes"""
     try:
         with Progress(
@@ -41,6 +42,8 @@ def generate(files: tuple, repo: str, commit: bool, push: bool, conventional: bo
         ) as progress:
             # Initialize services
             config = Config()
+            # Override emoji setting for this invocation without persisting to disk
+            config._config["emoji"] = "true" if emoji else "false"
             git_service = CommitGenGitService(config)
             ai_service = CommitGenerator(config)
 

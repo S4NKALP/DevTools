@@ -108,6 +108,7 @@ output_format: text
 
 # Commit Settings
 conventional_commits: true
+emoji: false
 
 # Repository Settings
 repositories: []
@@ -141,6 +142,9 @@ devtools config set max_tokens 150
 
 # Set conventional commit style (optional, default is true)
 devtools config set conventional_commits true
+
+# Enable or disable emojis in commit messages (optional, default is false)
+devtools config set emoji false
 
 # Set output format (optional, e.g., text or markdown)
 devtools config set output_format text
@@ -197,9 +201,11 @@ devtools commit generate [OPTIONS]
 - `--no-stage` Skip automatic staging of changes
 - `--sign` Sign commits with GPG
 - `--temperature FLOAT` AI temperature (0.0-1.0)
+ - `--emoji/--no-emoji` Include emoji prefixes (default: disabled)
 
-Commit messages follow the conventional format with emojis:
+Commit messages follow the conventional format (emojis optional):
 
+When emojis are enabled, these prefixes are used:
 - ✨ feat: New feature
 - 🐛 fix: Bug fix
 - 📚 docs: Documentation
