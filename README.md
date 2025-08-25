@@ -1,13 +1,13 @@
 # DevTools
 
-A collection of developer tools to enhance your workflow. This package includes tools for generating commit messages, changelogs, and .gitignore files, all accessible from a single unified CLI: `devtools`.
+A collection of developer tools to enhance your workflow. This package includes tools for generating commit messages, changelogs, hooks, and .gitignore files, all accessible from a single unified CLI: `devtools`.
 
 ## Installation
 
 ```bash
 # Clone the repository
 $ git clone https://github.com/S4NKALP/DevTools.git
-$ cd devtools
+$ cd DevTools
 
 # Install in editable mode
 $ pipx install .
@@ -55,17 +55,6 @@ export HUGGINGFACE_API_KEY="your-huggingface-api-key"
 
 # GitHub token for license generator
 export GITHUB_TOKEN="your-github-token"
-```
-
-Or create a `.env` file in your project root:
-
-```bash
-OPENROUTER_API_KEY=your-openrouter-api-key
-OPENAI_API_KEY=your-openai-api-key
-GOOGLE_API_KEY=your-google-api-key
-ANTHROPIC_API_KEY=your-anthropic-api-key
-HUGGINGFACE_API_KEY=your-huggingface-api-key
-GITHUB_TOKEN=your-github-token
 ```
 
 ### Managing Configuration
@@ -203,6 +192,7 @@ devtools commit generate [OPTIONS]
 - `--temperature FLOAT` AI temperature (0.0-1.0)
  - `--emoji/--no-emoji` Include emoji prefixes (default: disabled)
  - `--smart-group/--per-file` Group multi-file changes into one commit (default: smart-group)
+  - `--no-verify` Bypass git hooks when committing
 
 Commit messages follow the conventional format (emojis optional):
 
@@ -233,25 +223,36 @@ devtools commit generate --per-file -c
 #### Changelog Generation
 
 ```bash
-# Generate from git history
+# From commit subcommand (legacy path)
 devtools commit changelog generate [OPTIONS]
 
-# Generate interactively
-devtools changelog generate [OPTIONS]
-
-# Generate from a file
-devtools changelog generate-from-file [OPTIONS]
+# Top-level changelog commands
+devtools changelog generate [OPTIONS]              # from git history (alias: g)
+devtools changelog generate-interactive [OPTIONS]  # interactive mode (alias: i)
+devtools changelog generate-from-file [OPTIONS]    # from a file (alias: f)
 ```
 
-**Options:**
+**Options (history-based):**
 
-- `--version, -v VERSION` Version number for the changelog entry (required)
-- `--from-tag, -t TAG` Generate changelog from this tag
-- `--days, -d N` Generate changelog from the last N days
-- `--commits, -n N` Generate changelog from the last N commits
+- `--version, -v VERSION` Version number (required)
+- `--from-tag, -t TAG` Generate from this tag
+- `--days, -d N` Generate from the last N days
+- `--commits, -n N` Generate from the last N commits
 - `--output, -o FILE` Output file path (default: CHANGELOG.md)
-- `--temperature FLOAT` AI temperature (0.0-1.0)
-- `--input, -i FILE` Input file with changes (for file-based generation)
+- `--temperature FLOAT` AI temperature (default: 0.7)
+
+**Options (interactive):**
+
+- `--version, -v VERSION` Version number (required)
+- `--output, -o FILE` Output file path (default: CHANGELOG.md)
+- `--temperature FLOAT` AI temperature (default: 0.7)
+
+**Options (from file):**
+
+- `--version, -v VERSION` Version number (required)
+- `--input, -i FILE` Input changes file (required)
+- `--output, -o FILE` Output file path (default: CHANGELOG.md)
+- `--temperature FLOAT` AI temperature (default: 0.7)
 
 The changelog generator supports three modes:
 
@@ -325,6 +326,7 @@ devtools license generate [OPTIONS]
 - `--author, -a NAME` Name of the author/copyright holder
 - `--year, -y YEAR` Year for the copyright notice (defaults to current year)
 - `--output, -o FILE` Output file path (default: LICENSE)
+- `--multi, -m` Generate multiple licenses in one run
 
 Example:
 
@@ -337,6 +339,9 @@ devtools license generate
 
 # With all options specified
 devtools license generate --type mit --author "John Doe" --year 2024 --output LICENSE
+
+# Generate multiple licenses in one go
+devtools license generate --multi
 ```
 
 The license generator uses GitHub's license API to fetch templates. For optimal performance:
@@ -350,6 +355,8 @@ The license generator uses GitHub's license API to fetch templates. For optimal 
 2. If no token is set, the tool will use a fallback list of common licenses.
 
 If an invalid license type is provided, the tool will display a list of available licenses.
+
+When generating multiple licenses with `--multi`, separate files are created (e.g., `LICENSE_mit`, `LICENSE_apache-2.0`). A summary `LICENSE.md` is also written linking to each generated license.
 
 ---
 
