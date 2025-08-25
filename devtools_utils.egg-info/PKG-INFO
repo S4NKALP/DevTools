@@ -1,3 +1,37 @@
+Metadata-Version: 2.4
+Name: devtools-utils
+Version: 0.1.0
+Summary: A collection of developer tools
+Home-page: https://github.com/S4NKALP/DevTools
+Author: Sankalp Tharu
+Author-email: sankalptharu50028@gmail.com
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: click>=8.0.0
+Requires-Dist: rich>=10.0.0
+Requires-Dist: requests>=2.25.0
+Requires-Dist: pyyaml>=5.0.0
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
 # DevTools
 
 A collection of developer tools to enhance your workflow. This package includes tools for generating commit messages, changelogs, hooks, and .gitignore files, all accessible from a single unified CLI: `devtools`.
@@ -5,12 +39,15 @@ A collection of developer tools to enhance your workflow. This package includes 
 ## Installation
 
 ```bash
-# Stable release from PyPI
-pip install devtools-utils
+# Clone the repository
+$ git clone https://github.com/S4NKALP/DevTools.git
+$ cd DevTools
 
-# Using pipx
-pipx install devtools-utils
+# Install in editable mode
+$ pipx install .
 
+# Using Uv
+$ uv tool install .
 ```
 
 ## Configuration
@@ -450,32 +487,14 @@ python3 scripts/lintfix.py
 ## Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/S4NKALP/DevTools.git
-cd DevTools
-
-# (Optional) Create and activate a virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install package in editable (dev) mode
-pip install -e .
-
-# Install dev tools (optional but recommended)
-pip install pytest black ruff
+# Install dependencies
+pip install -r requirements.txt
 
 # Run tests
 pytest
 
-# Lint and format
+# Lint
 black .
-
-# Or use the helper scripts (if present)
-python3 scripts/format.py
-python3 scripts/lintfix.py
-
-# Run the CLI locally after editable install
-devtools --help
 ```
 
 ## Contributing
