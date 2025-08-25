@@ -4,7 +4,10 @@ Version: 0.1.0
 Summary: A collection of developer tools
 Home-page: https://github.com/S4NKALP/DevTools
 Author: Sankalp Tharu
-Author-email: sankalptharu50028@gmail.com
+Author-email: Sankalp Tharu <sankalptharu50028@gmail.com>
+License: GPL-3.0-or-later
+Project-URL: Homepage, https://github.com/S4NKALP/DevTools
+Keywords: devtools,cli,git,changelog,gitignore,license
 Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
@@ -22,15 +25,9 @@ Requires-Dist: rich>=10.0.0
 Requires-Dist: requests>=2.25.0
 Requires-Dist: pyyaml>=5.0.0
 Dynamic: author
-Dynamic: author-email
-Dynamic: classifier
-Dynamic: description
-Dynamic: description-content-type
 Dynamic: home-page
 Dynamic: license-file
-Dynamic: requires-dist
 Dynamic: requires-python
-Dynamic: summary
 
 # DevTools
 
@@ -39,15 +36,22 @@ A collection of developer tools to enhance your workflow. This package includes 
 ## Installation
 
 ```bash
-# Clone the repository
-$ git clone https://github.com/S4NKALP/DevTools.git
-$ cd DevTools
+# Stable release from PyPI
+pip install devtools-utils
 
-# Install in editable mode
-$ pipx install .
+# Using pipx (recommended for isolated CLI)
+pipx install devtools-utils
 
-# Using Uv
-$ uv tool install .
+# Using uv (fast Python package manager)
+uv tool install devtools-utils
+```
+
+Arch Linux prerequisites (for pipx/uv):
+
+```bash
+sudo pacman -S --needed python python-pip python-pipx git
+# optional: uv via pipx
+pipx install uv
 ```
 
 ## Configuration
@@ -487,14 +491,41 @@ python3 scripts/lintfix.py
 ## Development
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# Clone the repository
+git clone https://github.com/S4NKALP/DevTools.git
+cd DevTools
+
+# (Optional) Create and activate a virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install package in editable (dev) mode
+pip install -e .
+
+# Install dev tools (optional but recommended)
+pip install pytest black ruff
 
 # Run tests
 pytest
 
-# Lint
+# Lint and format
 black .
+
+# Or use the helper scripts (if present)
+python3 scripts/format.py
+python3 scripts/lintfix.py
+
+# Run the CLI locally after editable install
+devtools --help
+```
+
+Build from source (PEP 517):
+
+```bash
+# Requires pyproject.toml
+python -m build
+# or with uv
+uv build
 ```
 
 ## Contributing

@@ -72,7 +72,7 @@ class ChangelogGenerator(AIService):
         2. Keep descriptions concise but informative
         3. Use past tense
         4. Start each entry with a verb
-        5. Use emojis for each type:
+        5. Use emojis ONLY in section headers, not in bullet items:
            - ✨ Added
            - 🔄 Changed
            - 🐛 Fixed
@@ -81,8 +81,9 @@ class ChangelogGenerator(AIService):
            - 🔧 Maintenance
            - 🗑️ Removed
            - 🔒 Security
-        6. Only include PR references if they exist in the original commit message
-        7. Keep the changelog clean and professional"""
+        6. Do NOT prefix individual bullet points with emojis. Bullets should start with a dash and text.
+        7. Only include PR references if they exist in the original commit message
+        8. Keep the changelog clean and professional"""
 
         # Format changes for the prompt, preserving PR references
         changes_text = "\n".join(f"{change['message']}" for change in changes)
@@ -108,9 +109,13 @@ class ChangelogGenerator(AIService):
         normalized_version = version.lstrip("vV")
         inner_header_pattern = rf"^##\s+v?{re.escape(normalized_version)}\s*$"
         lines = []
+        emoji_prefix_pattern = r"^\-\s*[✨🔄🐛🚀📝🔧🗑️🔒]\s+"
         for line in cleaned.splitlines():
             if re.match(inner_header_pattern, line.strip()):
                 continue
+            # Strip emojis from bullet items while keeping header emojis
+            if re.match(emoji_prefix_pattern, line):
+                line = re.sub(emoji_prefix_pattern, "- ", line)
             lines.append(line)
         return "\n".join(lines).strip()
 
