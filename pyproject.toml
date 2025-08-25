@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "devtools-utils"
+version = "0.1.0"
+description = "A collection of developer tools"
+readme = "README.md"
+requires-python = ">=3.7"
+authors = [
+  { name = "Sankalp Tharu", email = "sankalptharu50028@gmail.com" },
+]
+license = { text = "GPL-3.0-or-later" }
+keywords = ["devtools", "cli", "git", "changelog", "gitignore", "license"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+]
+dependencies = [
+  "click>=8.0.0",
+  "rich>=10.0.0",
+  "requests>=2.25.0",
+  "pyyaml>=5.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/S4NKALP/DevTools"
+
+[project.scripts]
+devtools = "devtools.cli:cli"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["devtools*"]
+
+

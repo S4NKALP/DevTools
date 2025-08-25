@@ -24,7 +24,7 @@
 ### Packaging & Distribution
 - [x] Publish to PyPI
 - [x] Provide `uv`/`pipx` installation guide.
-- [ ] Add `pyproject.toml` and PEP 517/518 build backend.
+- [x] Add `pyproject.toml` and PEP 517/518 build backend.
 - [ ] Arch AUR PKGBUILD (devtools-bin and devtools-git).
 
 ### Quality: Testing & Linting

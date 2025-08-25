@@ -8,9 +8,19 @@ A collection of developer tools to enhance your workflow. This package includes 
 # Stable release from PyPI
 pip install devtools-utils
 
-# Using pipx
+# Using pipx (recommended for isolated CLI)
 pipx install devtools-utils
 
+# Using uv (fast Python package manager)
+uv tool install devtools-utils
+```
+
+Arch Linux prerequisites (for pipx/uv):
+
+```bash
+sudo pacman -S --needed python python-pip python-pipx git
+# optional: uv via pipx
+pipx install uv
 ```
 
 ## Configuration
@@ -476,6 +486,15 @@ python3 scripts/lintfix.py
 
 # Run the CLI locally after editable install
 devtools --help
+```
+
+Build from source (PEP 517):
+
+```bash
+# Requires pyproject.toml
+python -m build
+# or with uv
+uv build
 ```
 
 ## Contributing
