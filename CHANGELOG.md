@@ -2,9 +2,6 @@
 
 ## v0.1.1
 
-# Changelog
-
-
 ✨ Added
 - Added pyproject.toml for PEP 517/518 build support and update installation instructions
 - Added initial todo list for project improvements
