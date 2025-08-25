@@ -53,6 +53,7 @@ def cli():
     default=True,
     help="Smartly group multiple file changes into one commit (disable to commit per-file)",
 )
+@click.option("--no-verify", is_flag=True, help="Bypass git hooks when committing")
 def generate(
     files: tuple,
     repo: str,
@@ -64,6 +65,7 @@ def generate(
     temperature: float,
     emoji: bool,
     smart_group: bool,
+    no_verify: bool,
 ):
     """Generate commit messages for staged changes"""
     try:
@@ -131,14 +133,21 @@ def generate(
                     # Assumes files are already staged; git commit -- <file> will include only that path
                     for fp, msg in messages_by_file.items():
                         ok, out, err, code = git_service.commit_paths_verbose(
-                            msg, [fp], sign=sign
+                            msg, [fp], sign=sign, no_verify=no_verify
                         )
                         if not ok:
                             raise Exception(
                                 f"Failed to commit {fp}: {err or out or code}"
                             )
                 else:
-                    git_service.commit_changes(commit_message, sign=sign)
+                    if no_verify:
+                        ok, out, err, code = git_service.commit_verbose(
+                            commit_message, sign=sign, no_verify=True
+                        )
+                        if not ok:
+                            raise Exception(f"Failed to commit: {err or out or code}")
+                    else:
+                        git_service.commit_changes(commit_message, sign=sign)
                 progress.update(task, completed=True)
 
                 if push:

@@ -70,17 +70,19 @@ class GitService:
         files = self.get_staged_files() if staged else self.get_unstaged_files()
         return {file: self.get_diff(file, staged) for file in files}
 
-    def commit(self, message: str, sign: bool = False) -> bool:
+    def commit(self, message: str, sign: bool = False, no_verify: bool = False) -> bool:
         """Create a commit with the given message."""
         args = ["commit"]
         if sign:
             args.append("-S")
+        if no_verify:
+            args.append("--no-verify")
         args.extend(["-m", message])
         stdout, stderr, returncode = self._run_git_command(args)
         return returncode == 0
 
     def commit_verbose(
-        self, message: str, sign: bool = False
+        self, message: str, sign: bool = False, no_verify: bool = False
     ) -> Tuple[bool, str, str, int]:
         """Create a commit and return success and raw outputs.
 
@@ -90,7 +92,32 @@ class GitService:
         args = ["commit"]
         if sign:
             args.append("-S")
+        if no_verify:
+            args.append("--no-verify")
         args.extend(["-m", message])
+        stdout, stderr, returncode = self._run_git_command(args)
+        return returncode == 0, stdout, stderr, returncode
+
+    def commit_paths_verbose(
+        self,
+        message: str,
+        files: List[str],
+        sign: bool = False,
+        no_verify: bool = False,
+    ) -> Tuple[bool, str, str, int]:
+        """Create a commit including only the specified files.
+
+        Returns:
+            (ok, stdout, stderr, returncode)
+        """
+        if not files:
+            return False, "", "no files specified", 1
+        args = ["commit"]
+        if sign:
+            args.append("-S")
+        if no_verify:
+            args.append("--no-verify")
+        args.extend(["-m", message, "--"] + list(files))
         stdout, stderr, returncode = self._run_git_command(args)
         return returncode == 0, stdout, stderr, returncode
 
