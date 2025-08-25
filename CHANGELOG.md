@@ -1,6 +1,15 @@
 ## 0.1.1
 
-```
+## v0.1.1
+
+✨ Added
+- Added git hooks management and auto-fix on pre-commit
+- Added git hooks management CLI
+- Added emoji option to CLI and config to control emoji prefixes
+
+📝 Documentation
+- Recommended installation using pipx and uv
+
 ## v0.1.1
 
 ✨ Added
