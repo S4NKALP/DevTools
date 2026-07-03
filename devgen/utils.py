@@ -199,7 +199,7 @@ def get_git_staged_files() -> list[str]:
     try:
         output = run_git_command(["git", "diff", "--name-only", "--cached"])
         return [f for f in output.splitlines() if f.strip()]
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         return []
 
 
