@@ -46,7 +46,7 @@ def sanitize_ai_commit_message(raw_text: str) -> str:
     # - **fix: bug fix**
     # - chore(deps)!: breaking change
     header_pattern = re.compile(
-        r"^(\*\*)?(feat|fix|chore|refactor|docs|style|test|build|ci)(\(.*\))?!?: .*",
+        r"^(\*\*)?(feat|fix|chore|refactor|docs|style|test|build|ci|perf|revert)(\(.*\))?!?: .*",
         re.IGNORECASE,
     )
 
