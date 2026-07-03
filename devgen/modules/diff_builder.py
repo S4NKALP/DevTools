@@ -143,13 +143,14 @@ class ManifestInspector:
     """
 
     @staticmethod
-    def summary() -> str:
+    def summary(cwd: Optional[Path] = None) -> str:
+        cwd = cwd or get_git_root() or Path(".")
         lines = [
             s
             for s in (
-                ManifestInspector._pyproject(),
-                ManifestInspector._package_json(),
-                ManifestInspector._requirements(),
+                ManifestInspector._pyproject(cwd),
+                ManifestInspector._package_json(cwd),
+                ManifestInspector._requirements(cwd),
             )
             if s
         ]
@@ -164,8 +165,8 @@ class ManifestInspector:
         return re.split(r"[><=!~\[]", spec, 1)[0].strip()
 
     @staticmethod
-    def _pyproject() -> Optional[str]:
-        path = Path("pyproject.toml")
+    def _pyproject(cwd: Path) -> Optional[str]:
+        path = cwd / "pyproject.toml"
         if not path.exists():
             return None
         try:
@@ -186,8 +187,8 @@ class ManifestInspector:
         return f"[pyproject.toml] {' '.join(parts)}" if parts else None
 
     @staticmethod
-    def _package_json() -> Optional[str]:
-        path = Path("package.json")
+    def _package_json(cwd: Path) -> Optional[str]:
+        path = cwd / "package.json"
         if not path.exists():
             return None
         try:
@@ -203,8 +204,8 @@ class ManifestInspector:
         return f"[package.json] {' '.join(parts)}" if parts else None
 
     @staticmethod
-    def _requirements() -> Optional[str]:
-        path = Path("requirements.txt")
+    def _requirements(cwd: Path) -> Optional[str]:
+        path = cwd / "requirements.txt"
         if not path.exists():
             return None
         try:

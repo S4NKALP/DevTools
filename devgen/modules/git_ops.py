@@ -91,15 +91,16 @@ class GitOperator:
             [
                 "git",
                 "ls-files",
+                "-z",
                 "--deleted",
                 "--modified",
                 "--others",
                 "--exclude-standard",
             ]
         )
-        files = {f.strip() for f in out.split("\n") if f.strip()}
-        staged_out = self._run(["git", "diff", "--name-only", "--cached"])
-        files.update(f.strip() for f in staged_out.split("\n") if f.strip())
+        files = {f for f in out.split("\0") if f}
+        staged_out = self._run(["git", "diff", "-z", "--name-only", "--cached"])
+        files.update(f for f in staged_out.split("\0") if f)
         return sorted(files)
 
     # ------------------------------------------------------------------ actions

@@ -33,6 +33,8 @@ from devgen.utils import (
     extract_commit_messages,
     get_commit_dry_run_path,
     is_file_recent,
+    is_token_limit_error,
+    format_token_limit_error,
     load_template,
     render_template,
     sanitize_ai_commit_message,
@@ -241,9 +243,10 @@ class CommitEngine:
             if not self._process_group(group, group_files, cache_map):
                 failed.append(group)
             if len(groups) > 1 and i < len(groups) - 1:
-                import time
+                if self.provider != "ollama":
+                    import time
 
-                time.sleep(15)  # Conservative 4 RPM guard for free-tier
+                    time.sleep(15)  # Conservative 4 RPM guard for free-tier
         return failed
 
     def _process_group(
@@ -265,7 +268,7 @@ class CommitEngine:
             return self._apply_message(group, cache[group], files)
 
         try:
-            manifest_context = ManifestInspector.summary()
+            manifest_context = ManifestInspector.summary(cwd=self.git.cwd)
             if manifest_context:
                 self.logger.info("Including manifest context in prompt")
             with self.console.status(
@@ -279,10 +282,15 @@ class CommitEngine:
                 )
             message = sanitize_ai_commit_message(raw)
         except Exception as e:
-            self.logger.error(
-                f"Failed to generate message for group {group!r}: {e}",
-                exc_info=True,
-            )
+            if is_token_limit_error(e):
+                msg = format_token_limit_error(self.provider, e, group=group)
+                self.console.print(f"[bold red]{msg}[/bold red]")
+                self.logger.error(msg)
+            else:
+                self.logger.error(
+                    f"Failed to generate message for group {group!r}: {e}",
+                    exc_info=True,
+                )
             self.git.reset(files)
             return False
 
