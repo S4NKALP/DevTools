@@ -30,33 +30,56 @@ class BaseProvider(ABC):
         model: str | None = None,
         **kwargs: Any,
     ) -> str:
-        """Public entry point. Validates input, dispatches, and wraps errors.
+        """Public entry point. Validates input, dispatches, and wraps errors."""
+        import time
 
-        Args:
-            prompt: The prompt to send to the model.
-            api_key: Provider API key. May be ``None`` for local providers
-                (see :attr:`REQUIRES_API_KEY`).
-            model: Model id. Falls back to :attr:`DEFAULT_MODEL` when ``None``.
-            **kwargs: Forwarded to :meth:`_generate`.
-
-        Returns:
-            The generated text, stripped.
-
-        Raises:
-            ValueError: If the provider requires an API key and none was given.
-            RuntimeError: For any underlying failure, with a friendly message.
-        """
         if self.REQUIRES_API_KEY and not api_key:
             raise ValueError(
                 f"{self.DISPLAY_NAME} API key is missing. "
                 "Set it via `devgen setup config` or pass --api-key."
             )
         chosen_model = model or self.DEFAULT_MODEL
-        try:
-            text = self._generate(prompt, api_key, chosen_model, **kwargs)
-            return (text or "").strip()
-        except Exception as e:
-            self._handle_error(e)
+
+        max_retries = kwargs.get("max_retries", 5)
+        base_delay = kwargs.get("retry_delay", 10)
+
+        for attempt in range(max_retries + 1):
+            try:
+                text = self._generate(prompt, api_key, chosen_model, **kwargs)
+                return (text or "").strip()
+            except Exception as e:
+                if is_token_limit_error(e):
+                    self._handle_error(e)
+                if self._is_quota_error(e) and attempt < max_retries:
+                    delay = base_delay * (2**attempt)
+                    print(
+                        f"\n[{self.DISPLAY_NAME}] Quota/Rate limit hit (429). "
+                        f"Waiting {delay}s and retrying... "
+                        f"(Attempt {attempt + 1}/{max_retries})"
+                    )
+                    time.sleep(delay)
+                    continue
+                if self._is_quota_error(e) and attempt >= max_retries:
+                    raise RuntimeError(
+                        f"{self.DISPLAY_NAME} API quota exhausted (429) after multiple retries."
+                    ) from e
+                self._handle_error(e)
+        return ""
+
+    @staticmethod
+    def _is_quota_error(error: Exception) -> bool:
+        text = str(error).upper()
+        return any(
+            marker in text
+            for marker in (
+                "429",
+                "RESOURCE_EXHAUSTED",
+                "QUOTA_EXCEEDED",
+                "THROTTLED",
+                "RATE_LIMIT_EXCEEDED",
+                "TOO_MANY_REQUESTS",
+            )
+        )
 
     def _handle_error(self, error: Exception) -> None:
         """Translate an internal exception into a user-facing RuntimeError.
