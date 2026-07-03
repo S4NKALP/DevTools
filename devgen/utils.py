@@ -46,7 +46,7 @@ def sanitize_ai_commit_message(raw_text: str) -> str:
     # - **fix: bug fix**
     # - chore(deps)!: breaking change
     header_pattern = re.compile(
-        r"^(\*\*)?(feat|fix|chore|refactor|docs|style|test|build|ci|perf|revert)(\(.*\))?!?: .*",
+        r"^(\*\*)?(feat|fix|chore|refactor|docs|style|test|build|ci|perf|revert|deps|wip)(\(.*\))?!?: .*",
         re.IGNORECASE,
     )
 
@@ -75,6 +75,9 @@ def sanitize_ai_commit_message(raw_text: str) -> str:
             # If we hit another header or a known separator, we stop
             if "**Sponsor**" in line:
                 break
+            # Ignore trailing markdown code block markers
+            if line.strip() in ("```", "```md", "```markdown"):
+                continue
             cleaned_lines.append(line)
 
     if cleaned_lines:
